@@ -2,10 +2,11 @@ from django.shortcuts import render, HttpResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status   
-from .models import Selslist
+from .models import Selslist,Calendar
 from django.db.models import F,Sum, Count, Case, When
-from .serializers import TestDataSerializer
+from .serializers import TestDataSerializer,CalendarDataSerializer
 
+import json as JSON
 @api_view(['GET'])
 def getTestDatas(request):
     datas = Selslist.objects.all()
@@ -31,37 +32,43 @@ def putMember(request, pk):
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-def createList(request,given_name,given_school_id,given_admin):
-    is_exists = Selslist.objects.filter(name=given_name, school_id = given_school_id).exists()
+@api_view(['POST'])
+def postCalendar(request):
+    order = (JSON.loads(request.body.decode('utf-8')))
+    is_exists = Calendar.objects.filter(eventId = order["eventId"]).exists()
+    
     if is_exists:
-        return HttpResponse("It's exists member. please check your List")
+        return HttpResponse("It exists")
     else:
-        newObject = Selslist.objects.create(name=given_name, school_id = given_school_id, is_admin = given_admin)
+        print(order)
+        newObject = Calendar.objects.create(title=order["title"], startDate=order["start"], endDate = order["end"], color = order["color"], eventId = order["eventId"])
         newObject.save()
-        return HttpResponse("created!")
-    
-def deleteList(request, given_name,given_school_id):
-    is_exists = Selslist.objects.filter(name=given_name,school_id = given_school_id).exists()
+        return HttpResponse("Good!")
+
+@api_view(['GET'])
+def getOneCalendar(request):
+    order = (JSON.loads(request.body.decode('utf-8')))
+    is_exists = Calendar.objects.filter(eventId = order["eventId"]).exists()
+
     if is_exists:
-        Selslist.objects.filter(name=given_name, school_id = given_school_id).delete()
-        return HttpResponse("Deleted!")
+        order_qs = Calendar.objects.filter(eventId = order["eventId"])
+        return HttpResponse(order_qs)
     else:
-        return HttpResponse("Don't exists! Check your List!")    
-    
-def readList(request):
-    order_qs = Selslist.objects.all().values_list(
-        'name', 'is_admin'
-    )
+        return HttpResponse("No Calendar")
+
+@api_view(['GET'])
+def getAllCalendar(request):
+    order_qs = Calendar.objects.all().values()
     return HttpResponse(order_qs)
 
-def update_admin(request,given_name,given_admin,given_school_id):
-    is_exists = Selslist.objects.filter(name=given_name, school_id = given_school_id).exists()
+@api_view(['PUT'])
+def deleteCalendar(request):
+    order = (JSON.loads(request.body.decode('utf-8')))
+    is_exists = Calendar.objects.filter(eventId = order["eventId"]).exists()
 
     if is_exists:
-        order_qs = Selslist.objects.filter(name=given_name, school_id = given_school_id)
-        order_qs.update(is_admin = given_admin)
-        return HttpResponse("Updated your admin access!")
+        order_qs = Calendar.objects.filter(eventId = order["eventId"]).delete()
+        order_qs.save()
+        return HttpResponse("success!")
     else:
-        return HttpResponse("Don't exists name! Check your List")
-
+        return HttpResponse("No Calendar")
