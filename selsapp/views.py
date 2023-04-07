@@ -5,8 +5,21 @@ from rest_framework import status
 from .models import Selslist,Calendar
 from django.db.models import F,Sum, Count, Case, When
 from .serializers import TestDataSerializer,CalendarDataSerializer
-
+from django.http import JsonResponse
 import json as JSON
+
+def calendarToDictionary(calendar):
+   
+    output = {}
+    output["title"] = calendar.title
+    output["startDate"] = calendar.startDate
+    output["endDate"] = calendar.endDate
+    output["color"] = calendar.color
+    output["eventId"] = calendar.eventId
+    output["enterNames"] = calendar.enterNames
+
+    return output 
+
 @api_view(['GET'])
 def getTestDatas(request):
     datas = Selslist.objects.all()
@@ -58,8 +71,15 @@ def getOneCalendar(request):
 
 @api_view(['GET'])
 def getAllCalendar(request):
-    order_qs = Calendar.objects.all().values()
-    return HttpResponse(order_qs)
+    order_qs = Calendar.objects.all()
+    temp = []
+    for i in range(len(order_qs)):
+        temp.append(calendarToDictionary(order_qs[i]))
+    orders = temp
+    data = {
+        "orders":orders
+    }
+    return JsonResponse(data)
 
 @api_view(['PUT'])
 def deleteCalendar(request):
@@ -69,6 +89,6 @@ def deleteCalendar(request):
     if is_exists:
         order_qs = Calendar.objects.filter(eventId = order["eventId"]).delete()
         order_qs.save()
-        return HttpResponse("success!")
+        return HttpResponse("Success!")
     else:
         return HttpResponse("No Calendar")
