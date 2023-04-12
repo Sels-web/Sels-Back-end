@@ -107,12 +107,10 @@ def deleteCalendar(request):
     
 @api_view(['GET'])
 def getOneList(request,g_name):
-
-    order = (JSON.loads(request.body.decode('utf-8')))
-    is_exists = Selslist.objects.filter(name = order["name"]).exists()
+    is_exists = Selslist.objects.filter(name = g_name).exists()
 
     if is_exists:
-        order_qs = Selslist.objects.filter(name = order["name"]).values()
+        order_qs = Selslist.objects.filter(name = g_name)
         return HttpResponse(order_qs)
     else:
         return HttpResponse("No one that name")
