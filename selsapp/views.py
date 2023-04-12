@@ -20,6 +20,18 @@ def calendarToDictionary(calendar):
 
     return output 
 
+def selslistToDictionary(selslist):
+   
+    output = {}
+    output["school_id"] = selslist.school_id
+    output["name"] = selslist.name
+    output["is_admin"] = selslist.is_admin
+    output["attendance"] = selslist.attendance
+    output["accumulated_time"] = selslist.accumulated_time
+    output["latencyCost"] = selslist.latencyCost
+
+    return output 
+
 @api_view(['GET'])
 def getTestDatas(request):
     datas = Selslist.objects.all()
@@ -92,3 +104,15 @@ def deleteCalendar(request):
         return HttpResponse("Success!")
     else:
         return HttpResponse("No Calendar")
+    
+@api_view(['GET'])
+def getOneList(request,g_name):
+
+    order = (JSON.loads(request.body.decode('utf-8')))
+    is_exists = Selslist.objects.filter(name = order["name"]).exists()
+
+    if is_exists:
+        order_qs = Selslist.objects.filter(name = order["name"]).values()
+        return HttpResponse(order_qs)
+    else:
+        return HttpResponse("No one that name")

@@ -11,4 +11,7 @@ urlpatterns = [
     path('getOneCalendar',views.getOneCalendar),
     path('getAllCalendar',views.getAllCalendar),
     path('delteCalendar',views.deleteCalendar),
+
+    # 캘린더 인원 등록
+    path('getOneList/<str:g_name>',views.getOneList),
 ]
