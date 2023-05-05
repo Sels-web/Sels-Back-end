@@ -2,7 +2,7 @@ from django.shortcuts import render, HttpResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status   
-from .models import Selslist,Calendar
+from .models import Selslist,Calendar,Calendar_NameList
 from django.db.models import F,Sum, Count, Case, When
 from .serializers import TestDataSerializer,CalendarDataSerializer
 from django.http import JsonResponse
@@ -81,6 +81,7 @@ def getOneCalendar(request):
     else:
         return HttpResponse("No Calendar")
 
+
 @api_view(['GET'])
 def getAllCalendar(request):
     order_qs = Calendar.objects.all()
@@ -92,6 +93,26 @@ def getAllCalendar(request):
         "orders":orders
     }
     return JsonResponse(data)
+def postCalendarNameList(request,school_id,name,state):
+    # request로부터 받은 데이터로 새로운 인스턴스 생성
+    instance = Calendar_NameList.objects.create(
+        school_id=school_id,
+        name=name,
+        state=state,
+        state_point=0, # state_point 기본값으로 0 설정
+    )
+    
+    # 생성된 데이터를 응답으로 반환
+    serialized_data = {
+        'school_id': instance.school_id,
+        'name': instance.name,
+        'state_point': instance.state_point,
+        'state': instance.state,
+        'attendanceTime': instance.attendanceTime,
+    }
+    return HttpResponse(serialized_data)    
+
+
 
 @api_view(['PUT'])
 def deleteCalendar(request):
@@ -105,12 +126,12 @@ def deleteCalendar(request):
     else:
         return HttpResponse("No Calendar")
     
-@api_view(['GET'])
-def getOneList(request,g_name):
-    is_exists = Selslist.objects.filter(name = g_name).exists()
-
+@api_view(['POST'])
+def getOneList(request):
+    order = (JSON.loads(request.body.decode('utf-8')))
+    is_exists = Selslist.objects.filter(name = order["Username"]).exists()
     if is_exists:
-        order_qs = Selslist.objects.filter(name = g_name)
+        order_qs = Selslist.objects.filter(name = order["Username"]).values()
         return HttpResponse(order_qs)
     else:
-        return HttpResponse("No one that name")
+        return HttpResponse("No one that name") 

@@ -13,5 +13,6 @@ urlpatterns = [
     path('delteCalendar',views.deleteCalendar),
 
     # 캘린더 인원 등록
-    path('getOneList/<str:g_name>',views.getOneList),
+    path('getOneList',views.getOneList),
+    path('post-calendar-name-list/<str:school_id>/<str:name>/<str:state>/', views.postCalendarNameList),
 ]
