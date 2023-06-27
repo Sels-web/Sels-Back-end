@@ -21,7 +21,6 @@ def calendarToDictionary(calendar):
     return output 
 
 def selslistToDictionary(selslist):
-   
     output = {}
     output["school_id"] = selslist.school_id
     output["name"] = selslist.name
@@ -41,7 +40,7 @@ def getTestDatas(request):
 @api_view(['POST'])
 def postMember(request):
     reqData = request.data
-    serializer = TestDataSerializer(data=reqData)
+    serializer = TestDataSerializer(datpipa=reqData)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -111,9 +110,6 @@ def postCalendarNameList(request,school_id,name,state):
         'attendanceTime': instance.attendanceTime,
     }
     return HttpResponse(serialized_data)    
-
-
-
 @api_view(['PUT'])
 def deleteCalendar(request):
     order = (JSON.loads(request.body.decode('utf-8')))

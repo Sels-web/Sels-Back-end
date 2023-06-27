@@ -122,12 +122,16 @@ class DjangoSession(models.Model):
         db_table = 'django_session'
 
 class Selslist(models.Model):
-    school_id = models.CharField(max_length=500, default='')
-    name = models.CharField(max_length=500)
-    is_admin = models.CharField(max_length=500, null=True)
-    attendance = models.IntegerField(default=0)
-    accumulated_time = models.IntegerField(default=0)
-    latencyCost = models.IntegerField(default=0)
+    school_id = models.CharField(max_length=500, default='') # 학번
+    sex = models.CharField(max_length=50, default='')
+    department = models.CharField(max_length=500, default='') # 전공
+    name = models.CharField(max_length=500) # 이름
+    is_admin = models.CharField(max_length=500, null=True) # 직책
+    attendance = models.IntegerField(default=0) # 출석횟수
+    accumulated_time = models.IntegerField(default=0) # 누적 봉사시간
+    accumulated_cost = models.IntegerField(default=0) # 누적 지각비
+    latencyCost = models.IntegerField(default=0) # 정산해야하는 지각비
+    
     class Meta:
         db_table = 'Selslist'
 
