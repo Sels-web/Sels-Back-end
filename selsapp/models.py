@@ -7,6 +7,7 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 from datetime import datetime
+from django.utils import timezone
 
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=150)
@@ -149,9 +150,9 @@ class Calendar(models.Model):
 class Calendar_NameList(models.Model):
     school_id = models.CharField(max_length=500, default='')
     name = models.CharField(max_length=500)
-    state_point = models.IntegerField(default=0)
+    state_point = models.IntegerField(default=0) # 0: 미참 1: 참석 2: 지각 3: 불참(노쇼)
     state = models.CharField(max_length=500)
-    attendanceTime = models.DateTimeField(default=datetime.now,editable=True)
+    attendanceTime = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'Calendar_NameList'
