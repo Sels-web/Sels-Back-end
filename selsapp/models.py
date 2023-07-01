@@ -142,12 +142,12 @@ class Calendar(models.Model):
     endDate = models.DateTimeField()
     color = models.CharField(max_length=100)
     eventId = models.CharField(max_length=100,default='')
-    enterNames= models.ManyToManyField('Calendar_NameList')
 
     class Meta:
         db_table = 'Calendar'
 
 class Calendar_NameList(models.Model):
+    calendar_id = models.CharField(max_length=100, default='')
     school_id = models.CharField(max_length=500, default='')
     name = models.CharField(max_length=500)
     state_point = models.IntegerField(default=0) # 0: 미참 1: 참석 2: 지각 3: 불참(노쇼)

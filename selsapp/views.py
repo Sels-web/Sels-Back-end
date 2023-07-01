@@ -89,17 +89,26 @@ def postCalendar(request):
 def getOneCalendar(request):
     order = (JSON.loads(request.body.decode('utf-8')))
     is_exists = Calendar.objects.filter(eventId = order["eventId"]).exists()
-
     if is_exists:
         order_qs = Calendar.objects.filter(eventId = order["eventId"])
         return HttpResponse(order_qs)
     else:
         return HttpResponse("No Calendar")
+# 일정에 저장된 이름 가져오기
+@api_view(['GET'])
+def getCalendarNameList(request,calendar_id):
+    is_exists = Calendar.objects.filter(eventId = calendar_id).exists()
+    if is_exists:
+        order_qs = Calendar_NameList.objects.filter(calendar_id = calendar_id).values()
+        return HttpResponse(order_qs)
+    else:
+        return HttpResponse("No Calendar")
 
 ## 일정 1개에 출석부 명단 - 참여 인원 DB등록
-def postCalendarNameList(request,school_id,name,state):
+def postCalendarNameList(request,calendar_id,school_id,name,state):
     # request로부터 받은 데이터로 새로운 인스턴스 생성
     instance = Calendar_NameList.objects.create(
+        calendar_id = calendar_id,
         school_id=school_id,
         name=name,
         state=state,
@@ -111,6 +120,7 @@ def postCalendarNameList(request,school_id,name,state):
         'state_point': instance.state_point,
         'state': instance.state,
         'attendanceTime': instance.attendanceTime,
+        'calendar_id': instance.calendar_id,
     }
     return HttpResponse(serialized_data) 
 
