@@ -9,7 +9,6 @@ from django.http import JsonResponse
 import json as JSON
 
 def calendarToDictionary(calendar):
-   
     output = {}
     output["title"] = calendar.title
     output["startDate"] = calendar.startDate
@@ -17,8 +16,18 @@ def calendarToDictionary(calendar):
     output["color"] = calendar.color
     output["eventId"] = calendar.eventId
     output["enterNames"] = calendar.enterNames
-
     return output 
+
+def calendarNameListToDictionary(calendar_NameList):   
+    output = {}
+    output["calendar_id"] = calendar_NameList.title
+    output["school_id"] = calendar_NameList.startDate
+    output["name"] = calendar_NameList.endDate
+    output["state_point"] = calendar_NameList.color
+    output["state"] = calendar_NameList.eventId
+    output["attendanceTime"] = calendar_NameList.enterNames
+    return output 
+
 def selslistToDictionary(selslist):
     output = {}
     output["school_id"] = selslist.school_id
@@ -73,6 +82,8 @@ def getAllCalendar(request):
     return JsonResponse(data)
 
 ## 캘린더 일정 등록
+# input: JSON(title, startDate, endDate, Color, evnetId)
+# output: x
 @api_view(['POST'])
 def postCalendar(request):
     order = (JSON.loads(request.body.decode('utf-8')))
@@ -80,7 +91,13 @@ def postCalendar(request):
     if is_exists:
         return HttpResponse("It exists")
     else:
-        newObject = Calendar.objects.create(title=order["title"], startDate=order["start"], endDate = order["end"], color = order["color"], eventId = order["eventId"])
+        newObject = Calendar.objects.create(
+            title=order["title"], 
+            startDate=order["start"], 
+            endDate = order["end"], 
+            color = order["color"], 
+            eventId = order["eventId"]
+        )
         newObject.save()
         return HttpResponse("Good!")
 
@@ -90,22 +107,32 @@ def getOneCalendar(request):
     order = (JSON.loads(request.body.decode('utf-8')))
     is_exists = Calendar.objects.filter(eventId = order["eventId"]).exists()
     if is_exists:
-        order_qs = Calendar.objects.filter(eventId = order["eventId"])
-        return HttpResponse(order_qs)
+        temp = []
+        calendar_info = Calendar.objects.filter(eventId = order["eventId"]).values()
+        temp.append(calendarToDictionary(calendar_info))
+        user_info = Calendar_NameList.objects.filter(calendar_id = order["eventId"]).all()
+        for i in range(len(user_info)):
+            temp.append(user_info[i])
+        orders = temp
+        data = {
+            "order": orders
+        }
+        return JsonResponse(data)
     else:
         return HttpResponse("No Calendar")
+    
 # 일정에 저장된 이름 가져오기
-@api_view(['GET'])
-def getCalendarNameList(request,calendar_id):
-    is_exists = Calendar.objects.filter(eventId = calendar_id).exists()
-    if is_exists:
-        order_qs = Calendar_NameList.objects.filter(calendar_id = calendar_id).values()
-        return HttpResponse(order_qs)
-    else:
-        return HttpResponse("No Calendar")
+# @api_view(['GET'])
+# def getCalendarNameList(request,calendar_id):
+#     is_exists = Calendar.objects.filter(eventId = calendar_id).exists()
+#     if is_exists:
+#         order_qs = Calendar_NameList.objects.filter(calendar_id = calendar_id).values()
+#         return HttpResponse(order_qs)
+#     else:
+#         return HttpResponse("No Calendar")
 
 ## 일정 1개에 출석부 명단 - 참여 인원 DB등록
-def postCalendarNameList(request,calendar_id,school_id,name,state):
+def postCalendarName(request,calendar_id,school_id,name,state):
     # request로부터 받은 데이터로 새로운 인스턴스 생성
     instance = Calendar_NameList.objects.create(
         calendar_id = calendar_id,
@@ -125,6 +152,8 @@ def postCalendarNameList(request,calendar_id,school_id,name,state):
     return HttpResponse(serialized_data) 
 
 ## 일정 삭제 
+# input: eventId
+# ouput: x
 @api_view(['PUT'])
 def deleteCalendar(request):
     order = (JSON.loads(request.body.decode('utf-8')))
@@ -136,6 +165,7 @@ def deleteCalendar(request):
     else:
         return HttpResponse("No Calendar")
     
+## 이름 하나 불러오기
 @api_view(['POST'])
 def getOneList(request):
     order = (JSON.loads(request.body.decode('utf-8')))

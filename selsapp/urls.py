@@ -15,8 +15,8 @@ urlpatterns = [
 
     # 캘린더 인원 등록
     path('getOneList',views.getOneList),
-    path('post-calendar-name-list/<str:calendar_id>/<str:school_id>/<str:name>/<str:state>/', views.postCalendarNameList), ## 캘린더에 출석 명단 등록하기
+    path('post-calendar-name/<str:calendar_id>/<str:school_id>/<str:name>/<str:state>/', views.postCalendarName), ## 캘린더에 출석 명단 등록하기
 
     # 일정에 맞는 인원 불러오기
-    path('getCalendarNameList/<str:calendar_id>',views.getCalendarNameList)
+    #path('getCalendarNameList/<str:calendar_id>',views.getCalendarNameList)
 ]
