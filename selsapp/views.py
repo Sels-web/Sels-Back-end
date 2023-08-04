@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status   
 from rest_framework import permissions
 from rest_framework.views import APIView
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 
 from drf_yasg import openapi
@@ -13,48 +14,34 @@ from django.db.models import F,Sum, Count, Case, When
 from django.http import JsonResponse
 import json as JSON
 
-from .serializers import TestDataSerializer,CalendarAllDataSerializer
+from .serializers import ListDataSerializer,CalendarAllDataSerializer
 
 from .open_api_params import get_params,post_params
 
-class TestView(APIView):
+class GetTestView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @swagger_auto_schema(manual_parameters=get_params)
     def get (self,request):
         return Response("Swagger Testing")
-    
+class PostTestView(APIView):    
     @swagger_auto_schema()
     def post(self,request):
         return Response("Swagger Schema")
 
-
-# @api_view(['POST'])
-# def postCalendar(request):
-#     order = (JSON.loads(request.body.decode('utf-8')))
-#     is_exists = Calendar.objects.filter(eventId = order["eventId"]).exists()
-#     if is_exists:
-#         return HttpResponse("It exists")
-#     else:
-#         newObject = Calendar.objects.create(
-#             title=order["title"], 
-#             startDate=order["start"], 
-#             endDate = order["end"], 
-#             color = order["color"], 
-#             eventId = order["eventId"]
-#         )
-#         newObject.save()
-#         return HttpResponse("Good!")
-class CalendarView(APIView):
-    # Section 1 - 캘린더
+# Section 1 - 캘린더
+class GetCalendarView(APIView):
     ## 모든 캘린더 불러오기 
     permission_classes = [permissions.AllowAny]
-
     def get(self,request):
-        calendar_events = Calendar.objects.all()
-        serialized_calendar = CalendarAllDataSerializer(calendar_events, many=True)
-        return Response(serialized_calendar.data)
-    
+        # endpoint = request.path.split('/')[-2]
+        # if endpoint == 'getAllCalendar':
+            calendar_events = Calendar.objects.all()
+            serialized_calendar = CalendarAllDataSerializer(calendar_events, many=True)
+            return Response(serialized_calendar.data)
+      
+    ## 캘린더 등록하기
+class PostCalendarView(APIView):
     @swagger_auto_schema(manual_parameters=post_params)
     def post(self,request):
         title = request.query_params.get('title')
@@ -63,94 +50,31 @@ class CalendarView(APIView):
         start_date = request.query_params.get('startDate')
         end_date = request.query_params.get('endDate')
 
-        event = Calendar(
-            title=title,
-            color=color,
-            eventId=event_id,
-            startDate=start_date,
-            endDate=end_date
-        )
-        event.save()
+        is_exist = Calendar.objects.filter(eventId = event_id).exists()
 
-        return Response('success!')
+        if is_exist:
+            return Response('이미 있는 일정입니다!')
+        else:
+            event = Calendar(
+                title=title,
+                color=color,
+                eventId=event_id,
+                startDate=start_date,
+                endDate=end_date
+            )
+            event.save()
 
+            return Response('success!')
+
+class GetnameListView(APIView):
+    permission_classes = []
+
+    # 전체 명단 불러오기
+    def get(self,request):
+        namelist = Selslist.objects.all()
+        serialized_selslist = ListDataSerializer(namelist,many = True)
+        return Response(serialized_selslist.data)
     
-# @api_view(['GET'])
-
-# def getAllCalendar(request):
-        # order_qs = Calendar.objects.all()
-#         temp = []
-#         for i in range(len(order_qs)):
-#             temp.append(calendarToDictionary(order_qs[i]))
-#         orders = temp
-#         data = {
-#             "orders":orders
-#         }
-#         return JsonResponse(data)
-
-# def calendarToDictionary(calendar):
-#     output = {}
-#     output["title"] = calendar.title
-#     output["startDate"] = calendar.startDate
-#     output["endDate"] = calendar.endDate
-#     output["color"] = calendar.color
-#     output["eventId"] = calendar.eventId
-#     output["enterNames"] = calendar.enterNames
-#     return output 
-
-# def calendarNameListToDictionary(calendar_NameList):   
-#     output = {}
-#     output["calendar_id"] = calendar_NameList.title
-#     output["school_id"] = calendar_NameList.startDate
-#     output["name"] = calendar_NameList.endDate
-#     output["state_point"] = calendar_NameList.color
-#     output["state"] = calendar_NameList.eventId
-#     output["attendanceTime"] = calendar_NameList.enterNames
-#     return output 
-
-# def selslistToDictionary(selslist):
-#     output = {}
-#     output["school_id"] = selslist.school_id
-#     output["name"] = selslist.name
-#     output["is_admin"] = selslist.is_admin
-#     output["attendance"] = selslist.attendance
-#     output["accumulated_time"] = selslist.accumulated_time
-#     output["latencyCost"] = selslist.latencyCost
-#     output["accumulated_cost"]=selslist.accumulated_cost
-#     output["department"]=selslist.department
-#     output["sex"]=selslist.sex
-#     return output 
-
-# ## Data Testing by rest_frame
-# @api_view(['GET'])
-# def getTestDatas(request):
-#     datas = Selslist.objects.all()
-#     serializer = TestDataSerializer(datas, many=True)
-#     return Response(serializer.data)
-
-# @api_view(['POST'])
-# def postMember(request):
-#     reqData = request.data
-#     serializer = TestDataSerializer(datpipa=reqData)
-#     if serializer.is_valid():
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# @api_view(['PUT'])
-# def putMember(request, pk):
-#     reqData = request.data
-#     data = Selslist.objects.get(id=pk)
-#     serializer = TestDataSerializer(instance=data, data=reqData)
-#     if serializer.is_valid():
-#         serializer.save()
-#         return Response(serializer.data)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
 # ## 캘린더 세부 일정 불러오기
 # @api_view(['GET'])
 # def getOneCalendar(request):

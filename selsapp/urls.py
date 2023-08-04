@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+
 urlpatterns = [
 #     ## test urls
 #     path('readdatas/', views.getTestDatas, name="test01datas"),
@@ -17,12 +18,15 @@ urlpatterns = [
 
     # 일정에 맞는 인원 불러오기
     #path('getCalendarNameList/<str:calendar_id>',views.getCalendarNameList)
-
+    
     # django-swagger test
-    path('v1/test/',views.TestView.as_view(),name='test'),
-    
+    path('v1/test/get',views.GetTestView.as_view(),name='test'),
+    path('v1/test/post',views.PostTestView.as_view(),name='posttest'),
+
     # Calendar
-    path('calendarView',views.CalendarView.as_view(),name='getallcalendar')
-    
+    path('CalendarView/getAllCalendar',views.GetCalendarView.as_view(),name='getallcalendar'),
+    path('CalendarView/register',views.PostCalendarView.as_view(),name='postcalendar'),
+    # Namelist
+    path('NameView',views.GetnameListView.as_view(),name='getallname'),
 ]
 

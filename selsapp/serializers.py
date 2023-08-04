@@ -2,7 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from .models import Selslist,Calendar
 from rest_framework import serializers
 
-class TestDataSerializer(ModelSerializer):
+class ListDataSerializer(ModelSerializer):
     class Meta:
         model = Selslist
         fields = '__all__'
