@@ -19,7 +19,7 @@ get_params = [
 # ## 캘린더 일정 등록
 # # input: JSON(title, startDate, endDate, Color, evnetId)
 # # output: x
-post_params = [
+post_calendar_params = [
     openapi.Parameter(
         "title",
         openapi.IN_QUERY,
@@ -51,5 +51,25 @@ post_params = [
         description="End date of the event (FORMAT_DATE: ex)2024-01-27T16:30)",
         type=openapi.TYPE_STRING,
         format=openapi.FORMAT_DATETIME
+    ),
+]
+post_calendar_name_parmas = [
+    openapi.Parameter(
+        "eventId",
+        openapi.IN_QUERY,
+        description="Event ID",
+        type=openapi.TYPE_STRING
+    ),
+    openapi.Parameter(
+        "name",
+        openapi.IN_QUERY,
+        description="일정에 참가하는 이름",
+        type=openapi.TYPE_STRING,
+    ),
+    openapi.Parameter(
+        "school_id",
+        openapi.IN_QUERY,
+        description="school id",
+        type=openapi.TYPE_STRING
     ),
 ]

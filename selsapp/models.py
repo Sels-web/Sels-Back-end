@@ -150,7 +150,8 @@ class Calendar_NameList(models.Model):
     calendar_id = models.CharField(max_length=100, default='')
     school_id = models.CharField(max_length=500, default='')
     name = models.CharField(max_length=500)
-    state_point = models.IntegerField(default=0) # 0: 미참 1: 참석 2: 지각 3: 불참(노쇼)
+    
+    state_point = models.IntegerField(default=0) # 0: default 1: 미참 2: 참석 3: 지각 4: 노쇼
     state = models.CharField(max_length=500)
     attendanceTime = models.DateTimeField(default=timezone.now)
 
