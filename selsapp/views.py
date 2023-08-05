@@ -50,6 +50,7 @@ class GetCalendarOneView(APIView):
         # serialized_namelist 데이터에서 필요한 필드만 추출하여 병합한 리스트에 추가
         for namelist_item in serialized_namelist.data:
             combined_data.append(namelist_item)
+
         return Response(combined_data)
 ## 캘린더 일정 등록
 class PostCalendarView(APIView):
