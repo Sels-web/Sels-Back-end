@@ -29,7 +29,7 @@ class PostTestView(APIView):
 
 # Section 1 - 캘린더
 ## 모든 캘린더 불러오기
-class GetCalendarView(APIView):    
+class GetCalendarAllView(APIView):    
     permission_classes = [permissions.AllowAny]
     def get(self,request):
             calendar_events = Calendar.objects.all()
@@ -77,6 +77,40 @@ class PostCalendarView(APIView):
             event.save()
 
             return Response('success!')
+## 캘린더 일정 제거
+class DeleteCalendarView(APIView):
+    def delete(slef,request,eventId):
+        is_exist = Calendar.objects.filter(eventId = eventId).exists()
+        
+        if is_exist:
+            event = Calendar.objects.filter(eventId = eventId)
+            event.delete()
+            #event.save()
+            return Response('삭제가 완료되었습니다.')
+        else:
+            return Response('해당하는 일정이 존재하지 않습니다!')
+## 캘린더 일정 수정
+class UpdateCalendarView(APIView):
+    @swagger_auto_schema(manual_parameters=update_calendar_params)
+    def patch(self,request):
+        title = request.query_params.get('title')
+        color = request.query_params.get('Color')
+        event_id = request.query_params.get('eventId')
+        start_date = request.query_params.get('startDate')
+        end_date = request.query_params.get('endDate')
+
+        is_exists = Calendar.objects.filter(eventId = event_id).exists()
+
+        if is_exists:
+            event = Calendar.objects.filter(eventId = event_id)
+            event.update(title=title)
+            event.update(color=color)
+            event.update(startDate = start_date)
+            event.update(endDate = end_date)
+            return Response('수정이 완료되었습니다')
+        else:
+            return Response('존재하지 않는 일정입니다')
+
 
 ## 캘린더 일정에 명단 추가
 class PostCalendarNameView(APIView):
@@ -85,7 +119,7 @@ class PostCalendarNameView(APIView):
         event_id = request.query_params.get('eventId')
         name = request.query_params.get('name')
         school_id = request.query_params.get('school_id')
-        is_exists = Calendar.objects.filter(eventId = event_id)
+        is_exists = Calendar.objects.filter(eventId = event_id).exists()
         if is_exists:
             add_name = Calendar_NameList(
                 calendar_id = event_id,
@@ -101,7 +135,7 @@ class PostCalendarNameView(APIView):
             return Response('존재 하지 않는 일정입니다!')
 
 # Section 2 - 명부
-# 전체 명단 불러오기
+# 전체 부원 불러오기
 class GetnameListView(APIView):
     permission_classes = []
     def get(self,request):
@@ -109,10 +143,87 @@ class GetnameListView(APIView):
         serialized_selslist = NameSerializer(namelist,many = True)
         return Response(serialized_selslist.data)
 
-## 이름 검색
+## 부원 검색
 class GetOneNameView(APIView):
     def get(self,request,name):
         select_name = Selslist.objects.filter(name=name)
         serialized_name = NameSerializer(select_name, many=True)
         return Response(serialized_name.data)
+## 부원 등록    
+class PostNameListView(APIView):
+    @swagger_auto_schema(manual_parameters=post_selslist_params)
+    def post(self,request):
+        school_id = request.query_params.get('school_id')
+        sex = request.query_params.get('sex')
+        department = request.query_params.get('department')
+        name = request.query_params.get('name')
+        is_admin = request.query_params.get('is_admin')
+        attendance = request.query_params.get('attendance')
+        accumulated_time = request.query_params.get('accumulated_time')
+        accumulated_cost = request.query_params.get('accumulated_cost')
+        latencyCost = request.query_params.get('latencyCost')
+        
+        add_name = Selslist(
+               school_id = school_id,
+               sex = sex,
+               department = department,
+               name = name,
+               is_admin = is_admin,
+               attendance = attendance,
+               accumulated_time = accumulated_time,
+               accumulated_cost = accumulated_cost,
+               latencyCost = latencyCost,
+            )
+        add_name.save()
+        serialized_name = NameSerializer(add_name)
+        return Response(serialized_name.data)
+## 부원 수정
+class UpdateNameListView(APIView):
+    @swagger_auto_schema(manual_parameters=post_selslist_params)
+    def patch(self,request):
+        school_id = request.query_params.get('school_id')
+        sex = request.query_params.get('sex')
+        department = request.query_params.get('department')
+        name = request.query_params.get('name')
+        is_admin = request.query_params.get('is_admin')
+        attendance = request.query_params.get('attendance')
+        accumulated_time = request.query_params.get('accumulated_time')
+        accumulated_cost = request.query_params.get('accumulated_cost')
+        latencyCost = request.query_params.get('latencyCost')
+        
+        is_exist = Selslist.objects.filter(school_id = school_id).exists()
+
+        if is_exist:
+            user = Selslist.objects.filter(school_id = school_id)
+            user.update(school_id = school_id)
+            user.update(sex = sex)
+            user.update(department = department)
+            user.update(name = name)
+            user.update(is_admin = is_admin)
+            user.update(attendance = attendance)
+            user.update(accumulated_time = accumulated_time)
+            user.update(accumulated_cost = accumulated_cost)
+            user.update(latencyCost = latencyCost)
+
+            return Response('수정 완료')
+        else:
+            return Response('존재하지 않는 부원입니다.')
+## 전체 부원 삭제
+class DeleteAllNameListView(APIView):
+    def delete(self,request):
+        data = Selslist.objects.all()
+        data.delete()
+        return Response('모든 데이터가 삭제됬습니다.')
     
+class DeleteOneNameListView(APIView):
+    def delete(self,request,school_id,name):
+        data = Selslist.objects.filter(school_id = school_id, name=name)
+        is_exist = data.exists()
+        if is_exist:
+            data.delete()
+            return Response('선택 부원 정보가 삭제되었습니다.') 
+        else:
+            return Response('해당하는 부원이 없습니다.')
+        
+        
+        
