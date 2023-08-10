@@ -168,3 +168,43 @@ post_selslist_params = [
         default=0
     ),
 ]
+update_calendar_name_parmas = [
+    openapi.Parameter(
+        "eventId",
+        openapi.IN_QUERY,
+        description="Event ID",
+        type=openapi.TYPE_STRING
+    ),
+    openapi.Parameter(
+        "name",
+        openapi.IN_QUERY,
+        description="일정에 참가하는 이름",
+        type=openapi.TYPE_STRING,
+    ),
+    openapi.Parameter(
+        "school_id",
+        openapi.IN_QUERY,
+        description="school id",
+        type=openapi.TYPE_STRING
+    ),
+    openapi.Parameter(
+        "state_point",
+        openapi.IN_QUERY,
+        description="출석 여부 point",
+        type=openapi.TYPE_INTEGER
+    ),
+    openapi.Parameter(
+        "state",
+        openapi.IN_QUERY,
+        description="출석 상태",
+        type=openapi.TYPE_STRING
+    ),
+    openapi.Parameter(
+        "attendanceTime",
+        openapi.IN_QUERY,
+        description="출석 시간",
+        type=openapi.TYPE_STRING,
+        format=openapi.FORMAT_DATETIME
+    ),
+    
+]

@@ -17,15 +17,15 @@ import json as JSON
 from .serializers import *
 from .open_api_params import *
 
-class GetTestView(APIView):
-    permission_classes = [permissions.AllowAny]
-    @swagger_auto_schema(manual_parameters=get_params)
-    def get (self,request):
-        return Response("Swagger Testing")
-class PostTestView(APIView):    
-    @swagger_auto_schema()
-    def post(self,request):
-        return Response("Swagger Schema")
+# class GetTestView(APIView):
+#     permission_classes = [permissions.AllowAny]
+#     @swagger_auto_schema(manual_parameters=get_params)
+#     def get (self,request):
+#         return Response("Swagger Testing")
+# class PostTestView(APIView):    
+#     @swagger_auto_schema()
+#     def post(self,request):
+#         return Response("Swagger Schema")
 
 # Section 1 - 캘린더
 ## 모든 캘린더 불러오기
@@ -111,29 +111,6 @@ class UpdateCalendarView(APIView):
         else:
             return Response('존재하지 않는 일정입니다')
 
-
-## 캘린더 일정에 명단 추가
-class PostCalendarNameView(APIView):
-    @swagger_auto_schema(manual_parameters=post_calendar_name_parmas)
-    def post(self,request):
-        event_id = request.query_params.get('eventId')
-        name = request.query_params.get('name')
-        school_id = request.query_params.get('school_id')
-        is_exists = Calendar.objects.filter(eventId = event_id).exists()
-        if is_exists:
-            add_name = Calendar_NameList(
-                calendar_id = event_id,
-                school_id = school_id,
-                name = name,
-                state_point = 0,
-                state = 'default',
-                attendanceTime = '2023-01-27T16:30'
-            )
-            add_name.save()
-            return Response('success!')
-        else:
-            return Response('존재 하지 않는 일정입니다!')
-
 # Section 2 - 명부
 # 전체 부원 불러오기
 class GetnameListView(APIView):
@@ -145,10 +122,12 @@ class GetnameListView(APIView):
 
 ## 부원 검색
 class GetOneNameView(APIView):
+    permission_classes = []
     def get(self,request,name):
         select_name = Selslist.objects.filter(name=name)
         serialized_name = NameSerializer(select_name, many=True)
         return Response(serialized_name.data)
+    
 ## 부원 등록    
 class PostNameListView(APIView):
     @swagger_auto_schema(manual_parameters=post_selslist_params)
@@ -177,6 +156,8 @@ class PostNameListView(APIView):
         add_name.save()
         serialized_name = NameSerializer(add_name)
         return Response(serialized_name.data)
+    
+        #return Response('success')
 ## 부원 수정
 class UpdateNameListView(APIView):
     @swagger_auto_schema(manual_parameters=post_selslist_params)
@@ -224,6 +205,73 @@ class DeleteOneNameListView(APIView):
             return Response('선택 부원 정보가 삭제되었습니다.') 
         else:
             return Response('해당하는 부원이 없습니다.')
-        
-        
-        
+
+## 캘린더 일정에 명단 추가
+class PostCalendarNameView(APIView):
+    @swagger_auto_schema(manual_parameters=post_calendar_name_parmas)
+    def post(self,request):
+        event_id = request.query_params.get('eventId')
+        name = request.query_params.get('name')
+        school_id = request.query_params.get('school_id')
+        is_exists = Calendar.objects.filter(eventId = event_id).exists()
+        if is_exists:
+            add_name = Calendar_NameList(
+                calendar_id = event_id,
+                school_id = school_id,
+                name = name,
+                state_point = 0,
+                state = 'default',
+                attendanceTime = '2023-01-27T16:30'
+            )
+            add_name.save()
+            return Response('success!')
+        else:
+            return Response('존재 하지 않는 일정입니다!')
+class UpdateCalendarNameView(APIView):
+    @swagger_auto_schema(manual_parameters=update_calendar_name_parmas)
+    def patch(self,request):      
+        event_id = request.query_params.get('eventId')
+        name = request.query_params.get('name')
+        school_id = request.query_params.get('school_id')
+        state_point = request.query_params.get('state_point')
+        state = request.query_params.get('state')
+        attendanceTime = request.query_params.get('attendanceTime')
+
+        is_exists = Calendar.objects.filter(eventId = event_id).exists()
+
+        if is_exists:    
+            user = Calendar_NameList.objects.filter(school_id = school_id, calendar_id = event_id)
+            user_exists = user.exists()
+            if user_exists:
+                user.update(calendar_id = event_id)
+                user.update(name = name)
+                user.update(school_id = school_id)
+                user.update(state_point = state_point)
+                user.update(state = state)
+                user.update(attendanceTime = attendanceTime)
+                return Response('수정 완료')
+            else:
+                return Response('존재 하지 않는 인원입니다.')
+        else: 
+            return Response('존재 하지 않는 일정입니다.')
+class DeleteCalendarNameOneView(APIView):
+    def delete(self,request,eventId, school_id):
+        user = Calendar_NameList.objects.filter(school_id = school_id, calendar_id = eventId)
+        user_exists = user.exists()
+        if user_exists:
+            user.delete()
+            return Response('삭제 완료')
+        else:
+            return Response('잘못된 명령입니다.')
+class DeleteCalendarNameAllView(APIView):
+    def delete(self,request,eventId):
+        event = Calendar_NameList.objects.filter(calendar_id = eventId).all()
+        event_exists = event.exists()
+        if event_exists:
+            event.delete()
+            return Response('모든 데이터 삭제 완료')
+        else:
+            return Response('잘못된 명령입니다.')
+
+
+    
