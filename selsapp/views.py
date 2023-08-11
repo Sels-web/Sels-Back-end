@@ -1,31 +1,23 @@
-from django.shortcuts import render, HttpResponse
+#from django.shortcuts import render, HttpResponse
+#from rest_framework.generics import ListCreateAPIView
+#from rest_framework.decorators import api_view
+#from rest_framework import status   
+#from django.http import JsonResponse
+#import json as JSON
 
-from rest_framework.decorators import api_view
-from rest_framework import status   
+# rest_framework
 from rest_framework import permissions
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 
-from drf_yasg import openapi
+# models
 from drf_yasg.utils import swagger_auto_schema
 from .models import Selslist,Calendar,Calendar_NameList
 from django.db.models import F,Sum, Count, Case, When
-from django.http import JsonResponse
-import json as JSON
 
+# local
 from .serializers import *
 from .open_api_params import *
-
-# class GetTestView(APIView):
-#     permission_classes = [permissions.AllowAny]
-#     @swagger_auto_schema(manual_parameters=get_params)
-#     def get (self,request):
-#         return Response("Swagger Testing")
-# class PostTestView(APIView):    
-#     @swagger_auto_schema()
-#     def post(self,request):
-#         return Response("Swagger Schema")
 
 # Section 1 - 캘린더
 ## 모든 캘린더 불러오기
@@ -75,8 +67,8 @@ class PostCalendarView(APIView):
                 endDate=end_date
             )
             event.save()
-
-            return Response('success!')
+            serialized_event = CalendarAllDataSerializer(event)
+            return Response(serialized_event.data)
 ## 캘린더 일정 제거
 class DeleteCalendarView(APIView):
     def delete(slef,request,eventId):
@@ -85,8 +77,7 @@ class DeleteCalendarView(APIView):
         if is_exist:
             event = Calendar.objects.filter(eventId = eventId)
             event.delete()
-            #event.save()
-            return Response('삭제가 완료되었습니다.')
+            return Response('삭제 완료')
         else:
             return Response('해당하는 일정이 존재하지 않습니다!')
 ## 캘린더 일정 수정
@@ -107,7 +98,8 @@ class UpdateCalendarView(APIView):
             event.update(color=color)
             event.update(startDate = start_date)
             event.update(endDate = end_date)
-            return Response('수정이 완료되었습니다')
+            serialized_event = CalendarAllDataSerializer(event, many = True)
+            return Response(serialized_event.data)
         else:
             return Response('존재하지 않는 일정입니다')
 
@@ -185,8 +177,9 @@ class UpdateNameListView(APIView):
             user.update(accumulated_time = accumulated_time)
             user.update(accumulated_cost = accumulated_cost)
             user.update(latencyCost = latencyCost)
-
-            return Response('수정 완료')
+            
+            serialized_user = NameSerializer(user, many=True)
+            return Response(serialized_user.data)
         else:
             return Response('존재하지 않는 부원입니다.')
 ## 전체 부원 삭제
@@ -224,7 +217,8 @@ class PostCalendarNameView(APIView):
                 attendanceTime = '2023-01-27T16:30'
             )
             add_name.save()
-            return Response('success!')
+            serialized_add_name = CalendarNameListSerializer(add_name)
+            return Response(serialized_add_name.data)
         else:
             return Response('존재 하지 않는 일정입니다!')
 class UpdateCalendarNameView(APIView):
@@ -249,7 +243,9 @@ class UpdateCalendarNameView(APIView):
                 user.update(state_point = state_point)
                 user.update(state = state)
                 user.update(attendanceTime = attendanceTime)
-                return Response('수정 완료')
+
+                serialized_user = CalendarNameListSerializer(user, many=True)
+                return Response(serialized_user.data)
             else:
                 return Response('존재 하지 않는 인원입니다.')
         else: 
