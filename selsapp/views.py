@@ -12,8 +12,8 @@ from rest_framework.response import Response
 
 # models
 from drf_yasg.utils import swagger_auto_schema
-from .models import Selslist,Calendar,Calendar_NameList
-from django.db.models import F,Sum, Count, Case, When
+from .models import *
+from django.db.models import *
 
 # local
 from .serializers import *
