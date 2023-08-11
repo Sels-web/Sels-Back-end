@@ -163,6 +163,7 @@ class Reference(models.Model):
     title = models.CharField(max_length = 1000)
     file_location = models.FileField(upload_to='Uploaded Files/%y/%m/%d/', blank=True)
     upload_date = models.DateField(auto_now = True)
+    content = models.TextField(max_length = 5000, default='')
 
     class Meta:
         db_table = 'Reference'
