@@ -19,6 +19,9 @@ from django.db.models import *
 from .serializers import *
 from .open_api_params import *
 
+# function
+from datetime import datetime
+
 # Section 1 - 캘린더
 ## 모든 캘린더 불러오기
 class GetCalendarAllView(APIView):    
@@ -44,6 +47,16 @@ class GetCalendarOneView(APIView):
             combined_data.append(namelist_item)
 
         return Response(combined_data)
+    
+## 캘린더 월별 불러오기
+class GetCalendarMonthView(APIView):
+    def get(self,request):
+        now = datetime.now()
+        querymonth = now.strftime('%Y-%m')
+        events = Calendar.objects.filter(startDate__icontains = querymonth )
+        serialized_event = CalendarAllDataSerializer(events, many=True)
+        return Response(serialized_event.data)
+
 ## 캘린더 일정 등록
 class PostCalendarView(APIView):
     @swagger_auto_schema(manual_parameters=post_calendar_params)
@@ -105,10 +118,25 @@ class UpdateCalendarView(APIView):
 
 # Section 2 - 명부
 # 전체 부원 불러오기
+# function
+## 0: 이름 오름차순, 1: 이름 내림차순, 2: 출석횟수 오름차순, 3: 출석횟수 내림차순, 4: 누적 봉사시간 오름차순, 5: 누적 봉사시간 내림차순, 6: 지각비 유무
 class GetnameListView(APIView):
     permission_classes = []
-    def get(self,request):
-        namelist = Selslist.objects.all()
+    def get(self,request,function):
+        if function == 0:
+            namelist = Selslist.objects.order_by('name')
+        elif function == 1:
+            namelist = Selslist.objects.order_by('-name')
+        elif function == 2:
+            namelist = Selslist.objects.order_by('attendance','name')
+        elif function == 3:
+            namelist = Selslist.objects.order_by('-attendance','name')
+        elif function == 4:
+            namelist = Selslist.objects.order_by('accumulated_time','name')
+        elif function == 5:
+            namelist = Selslist.objects.order_by('-accumulated_time','name')
+        elif function == 6:
+            namelist = Selslist.objects.filter(latencyCost__gt = 0).order_by('name')
         serialized_selslist = NameSerializer(namelist,many = True)
         return Response(serialized_selslist.data)
 
