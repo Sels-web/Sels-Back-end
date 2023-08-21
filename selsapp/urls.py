@@ -18,7 +18,7 @@ urlpatterns = [
     path('namelist/all/<int:function>',views.GetnameListView.as_view(),name='getallname'), # 전체 명단 불러오기 by function key
     path('namelist/register',views.PostNameListView.as_view(),name='postname'), # 명단 등록하기
     path('namelist/<str:name>',views.GetOneNameView.as_view(),name='getonename'), # 이름으로 검색
-    path('namelist',views.UpdateNameListView.as_view(),name='updatename'), # 명단 수정하기
+    # path('namelist',views.UpdateNameListView.as_view(),name='updatename'), # 명단 수정하기
     path('namelist/delete-one/<str:school_id>/<str:name>',views.DeleteOneNameListView.as_view(),name='deleteonename'), # 명단 삭제하기
 
     path('nameList/delete-all',views.DeleteAllNameListView.as_view(),name='deleteallname'), # 모든 명단 삭제하기

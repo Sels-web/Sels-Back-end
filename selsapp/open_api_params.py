@@ -96,67 +96,20 @@ post_calendar_name_parmas = [
         type=openapi.TYPE_STRING
     ),
 ]
-post_selslist_params = [
-    openapi.Parameter(
-        "school_id",
-        openapi.IN_QUERY,
-        description="학번",
-        type=openapi.TYPE_STRING
-    ),
-    openapi.Parameter(
-        "sex",
-        openapi.IN_QUERY,
-        description="성별",
-        type=openapi.TYPE_STRING
-    ),
-    openapi.Parameter(
-        "department",
-        openapi.IN_QUERY,
-        description="학과",
-        type=openapi.TYPE_STRING
-    ),
-    openapi.Parameter(
-        "name",
-        openapi.IN_QUERY,
-        description="이름",
-        type=openapi.TYPE_STRING,
-    ),
-    openapi.Parameter(
-        "is_admin",
-        openapi.IN_QUERY,
-        description="직책",
-        type=openapi.TYPE_STRING,
-        default='부원'
-    ),
-        openapi.Parameter(
-        "attendance",
-        openapi.IN_QUERY,
-        description="참석 횟수",
-        type=openapi.TYPE_INTEGER,
-        default=0
-    ),
-        openapi.Parameter(
-        "accumulated_time",
-        openapi.IN_QUERY,
-        description="누적 봉사시간",
-        type=openapi.TYPE_INTEGER,
-        default=0
-    ),
-        openapi.Parameter(
-        "accumulated_cost",
-        openapi.IN_QUERY,
-        description="누적 지각비",
-        type=openapi.TYPE_INTEGER,
-        default=0
-    ),
-        openapi.Parameter(
-        "latencyCost",
-        openapi.IN_QUERY,
-        description="현재 지각비",
-        type=openapi.TYPE_INTEGER,
-        default=0
-    ),
-]
+post_selslist_params = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'school_id': openapi.Schema(type=openapi.TYPE_STRING, description='학번'),
+        'sex': openapi.Schema(type=openapi.TYPE_STRING, description='성별'),
+        'department': openapi.Schema(type=openapi.TYPE_STRING, description='학과'),
+        'name': openapi.Schema(type=openapi.TYPE_STRING, description='이름'),
+        'is_admin': openapi.Schema(type=openapi.TYPE_STRING, description='직책'),
+        'attendance': openapi.Schema(type=openapi.TYPE_INTEGER, description='출석 횟수'),
+        'accumulated_time': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 봉사시간'),
+        'accumulated_cost': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 지각비'),
+        'latencyCost': openapi.Schema(type=openapi.TYPE_INTEGER, description='현재 지각비'),
+    }
+)
 update_calendar_name_parmas = [
     openapi.Parameter(
         "eventId",

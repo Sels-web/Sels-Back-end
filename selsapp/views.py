@@ -150,66 +150,47 @@ class GetOneNameView(APIView):
     
 ## 부원 등록    
 class PostNameListView(APIView):
-    @swagger_auto_schema(manual_parameters=post_selslist_params)
-    def post(self,request):
-        school_id = request.query_params.get('school_id')
-        sex = request.query_params.get('sex')
-        department = request.query_params.get('department')
-        name = request.query_params.get('name')
-        is_admin = request.query_params.get('is_admin')
-        attendance = request.query_params.get('attendance')
-        accumulated_time = request.query_params.get('accumulated_time')
-        accumulated_cost = request.query_params.get('accumulated_cost')
-        latencyCost = request.query_params.get('latencyCost')
-        
-        add_name = Selslist(
-               school_id = school_id,
-               sex = sex,
-               department = department,
-               name = name,
-               is_admin = is_admin,
-               attendance = attendance,
-               accumulated_time = accumulated_time,
-               accumulated_cost = accumulated_cost,
-               latencyCost = latencyCost,
-            )
-        add_name.save()
-        serialized_name = NameSerializer(add_name)
-        return Response(serialized_name.data)
-    
-        #return Response('success')
-## 부원 수정
-class UpdateNameListView(APIView):
-    @swagger_auto_schema(manual_parameters=post_selslist_params)
-    def patch(self,request):
-        school_id = request.query_params.get('school_id')
-        sex = request.query_params.get('sex')
-        department = request.query_params.get('department')
-        name = request.query_params.get('name')
-        is_admin = request.query_params.get('is_admin')
-        attendance = request.query_params.get('attendance')
-        accumulated_time = request.query_params.get('accumulated_time')
-        accumulated_cost = request.query_params.get('accumulated_cost')
-        latencyCost = request.query_params.get('latencyCost')
-        
-        is_exist = Selslist.objects.filter(school_id = school_id).exists()
+    @swagger_auto_schema(request_body=post_selslist_params)
+    def post(self,request):        
+        add_name = NameSerializer(data=request.data)
+        if add_name.is_valid():
+            add_name.save()
+            return Response(add_name.data, status=201)
+        return Response(add_name.errors, status=400)
 
-        if is_exist:
-            user = Selslist.objects.filter(school_id = school_id)
-            user.update(school_id = school_id)
-            user.update(sex = sex)
-            user.update(department = department)
-            user.update(name = name)
-            user.update(is_admin = is_admin)
-            user.update(attendance = attendance)
-            user.update(accumulated_time = accumulated_time)
-            user.update(accumulated_cost = accumulated_cost)
-            user.update(latencyCost = latencyCost)
+
+## 부원 수정
+# class UpdateNameListView(APIView):
+#     @swagger_auto_schema(manual_parameters=post_selslist_params)
+#     def patch(self,request):
+#         school_id = request.query_params.get('school_id')
+#         sex = request.query_params.get('sex')
+#         department = request.query_params.get('department')
+#         name = request.query_params.get('name')
+#         is_admin = request.query_params.get('is_admin')
+#         attendance = request.query_params.get('attendance')
+#         accumulated_time = request.query_params.get('accumulated_time')
+#         accumulated_cost = request.query_params.get('accumulated_cost')
+#         latencyCost = request.query_params.get('latencyCost')
+        
+#         is_exist = Selslist.objects.filter(school_id = school_id).exists()
+
+#         if is_exist:
+#             user = Selslist.objects.filter(school_id = school_id)
+#             user.update(school_id = school_id)
+#             user.update(sex = sex)
+#             user.update(department = department)
+#             user.update(name = name)
+#             user.update(is_admin = is_admin)
+#             user.update(attendance = attendance)
+#             user.update(accumulated_time = accumulated_time)
+#             user.update(accumulated_cost = accumulated_cost)
+#             user.update(latencyCost = latencyCost)
             
-            serialized_user = NameSerializer(user, many=True)
-            return Response(serialized_user.data)
-        else:
-            return Response('존재하지 않는 부원입니다.')
+#             serialized_user = NameSerializer(user, many=True)
+#             return Response(serialized_user.data)
+#         else:
+#             return Response('존재하지 않는 부원입니다.')
 ## 전체 부원 삭제
 class DeleteAllNameListView(APIView):
     def delete(self,request):
