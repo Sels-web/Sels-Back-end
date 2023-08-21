@@ -10,9 +10,8 @@ class NameSerializer(ModelSerializer):
 class CalendarAllDataSerializer(ModelSerializer):
     class Meta:
         model = Calendar
-        #fields = '__all__'
-        exclude = ['id']
-
+        fields = '__all__'
+        
 class CalendarOneDataSerializer(ModelSerializer):
     class Meta:
         model = Calendar

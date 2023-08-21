@@ -138,8 +138,8 @@ class Selslist(models.Model):
 
 class Calendar(models.Model):
     title = models.CharField(max_length=500)
-    startDate = models.DateTimeField()
-    endDate = models.DateTimeField()
+    startDate = models.DateTimeField(default=timezone.now)
+    endDate = models.DateTimeField(default=timezone.now)
     color = models.CharField(max_length=100)
     eventId = models.CharField(max_length=100,default='')
 
