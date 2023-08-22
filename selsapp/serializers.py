@@ -22,3 +22,8 @@ class CalendarNameListSerializer(ModelSerializer):
     class Meta:
         model = Calendar_NameList
         fields = '__all__'
+
+class NameListSearchSerializer(serializers.Serializer):
+    order      = serializers.CharField(help_text='정렬 순서:name, attendance, accumulated_time 사용 가능', default='name')
+    latencyCost = serializers.IntegerField(help_text='지각비', default=0)
+    name = serializers.CharField(help_text = '이름 검색',required=False)

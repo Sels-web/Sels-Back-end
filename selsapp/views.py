@@ -112,33 +112,36 @@ class DeleteCalendarView(APIView):
 # 전체 부원 불러오기
 # function
 ## 0: 이름 오름차순, 1: 이름 내림차순, 2: 출석횟수 오름차순, 3: 출석횟수 내림차순, 4: 누적 봉사시간 오름차순, 5: 누적 봉사시간 내림차순, 6: 지각비 유무
+### order, latencyCost, 
 class GetnameListView(APIView):
     permission_classes = []
-    def get(self,request,function):
-        if function == 0:
-            namelist = Selslist.objects.order_by('name')
-        elif function == 1:
-            namelist = Selslist.objects.order_by('-name')
-        elif function == 2:
-            namelist = Selslist.objects.order_by('attendance','name')
-        elif function == 3:
-            namelist = Selslist.objects.order_by('-attendance','name')
-        elif function == 4:
-            namelist = Selslist.objects.order_by('accumulated_time','name')
-        elif function == 5:
-            namelist = Selslist.objects.order_by('-accumulated_time','name')
-        elif function == 6:
-            namelist = Selslist.objects.filter(latencyCost__gt = 0).order_by('name')
+    @swagger_auto_schema(query_serializer=NameListSearchSerializer)
+    def get(self,request):
+        order = request.query_params.get('order')
+        latency_cost = int(request.query_params.get('latencyCost'))
+        name = request.query_params.get('name')
+
+        if name:
+            if (latency_cost > 0):
+                namelist = Selslist.objects.filter(name__icontains = name,latencyCost__gt = latency_cost).order_by(order)
+            else:
+                namelist = Selslist.objects.filter(name__icontains = name).order_by(order)
+        else: 
+            if (latency_cost > 0):
+                namelist = Selslist.objects.filter(latencyCost__gt = latency_cost).order_by(order)
+            else:
+                namelist = Selslist.objects.order_by(order)
+        
         serialized_selslist = NameSerializer(namelist,many = True)
         return Response(serialized_selslist.data,status=200)
-
+        
 ## 부원 검색
-class GetOneNameView(APIView):
-    permission_classes = []
-    def get(self,request,name):
-        select_name = Selslist.objects.filter(name=name)
-        serialized_name = NameSerializer(select_name, many=True)
-        return Response(serialized_name.data,status=200)
+# class GetOneNameView(APIView):
+#     permission_classes = []
+#     def get(self,request,name):
+#         select_name = Selslist.objects.filter(name__icontains = name)
+#         serialized_name = NameSerializer(select_name, many=True)
+#         return Response(serialized_name.data,status=200)
 
 ## 부원 상세 정보 검색
 class GetOnedetailView(APIView):
