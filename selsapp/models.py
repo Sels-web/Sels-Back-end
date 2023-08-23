@@ -128,6 +128,7 @@ class Selslist(models.Model):
     department = models.CharField(max_length=500, default='') # 전공
     name = models.CharField(max_length=500) # 이름
     is_admin = models.CharField(max_length=500, null=True) # 직책
+    
     attendance = models.IntegerField(default=0) # 출석횟수
     accumulated_time = models.IntegerField(default=0) # 누적 봉사시간
     accumulated_cost = models.IntegerField(default=0) # 누적 지각비
@@ -142,6 +143,7 @@ class Calendar(models.Model):
     endDate = models.DateTimeField(default=timezone.now)
     color = models.CharField(max_length=100)
     eventId = models.CharField(max_length=100,default='')
+    activity_time = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'Calendar'
@@ -151,7 +153,7 @@ class Calendar_NameList(models.Model):
     school_id = models.CharField(max_length=500, default='')
     name = models.CharField(max_length=500)
     
-    state_point = models.IntegerField(default=0) # 0: default 1: 미참 2: 참석 3: 지각 4: 노쇼
+    state_point = models.IntegerField(default=0) # 0: default 1: 참석 2: 지각 3: 노쇼
     state = models.CharField(max_length=500)
     attendanceTime = models.DateTimeField(default=timezone.now)
 
