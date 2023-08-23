@@ -53,11 +53,11 @@ update_calendar_name_params = openapi.Schema(
 post_selslist_params = openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'school_id': openapi.Schema(type=openapi.TYPE_STRING, description='학번'),
-        'sex': openapi.Schema(type=openapi.TYPE_STRING, description='성별'),
-        'department': openapi.Schema(type=openapi.TYPE_STRING, description='학과'),
         'name': openapi.Schema(type=openapi.TYPE_STRING, description='이름'),
-        'is_admin': openapi.Schema(type=openapi.TYPE_STRING, description='직책'),
+        'is_admin': openapi.Schema(type=openapi.TYPE_STRING, description='직책', default='부원'),
+        'sex': openapi.Schema(type=openapi.TYPE_STRING, description='성별'),
+        'school_id': openapi.Schema(type=openapi.TYPE_STRING, description='학번'),
+        'department': openapi.Schema(type=openapi.TYPE_STRING, description='학과',default='학과'),
         'attendance': openapi.Schema(type=openapi.TYPE_INTEGER, description='출석 횟수'),
         'accumulated_time': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 봉사시간'),
         'accumulated_cost': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 지각비'),
