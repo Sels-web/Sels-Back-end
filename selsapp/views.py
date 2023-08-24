@@ -230,11 +230,33 @@ class GetnameListView(APIView):
 class PostNameListView(APIView):
     @swagger_auto_schema(request_body=post_selslist_params)
     def post(self,request):        
-        add_name = NameSerializer(data=request.data)
-        if add_name.is_valid():
-            add_name.save()
-            return Response(add_name.data, status=201)
-        return Response(add_name.errors, status=400)
+        name = request.data.get('name')
+        is_admin = request.data.get('is_admin')
+        sex = request.data.get('sex')
+        school_id = request.data.get('school_id')
+        department = request.data.get('department')
+        attendance = request.data.get('attendance')
+        accumulated_time = request.data.get('accumulated_time')
+        accumulated_cost = request.data.get('accumulated_cost')
+        latencyCost = request.data.get('latencyCost')
+
+        if Selslist.objects.filter(school_id=school_id).exists():
+            return Response({'message': 'school already exists'}, status=400)
+        else:
+            user = Selslist(
+              name = name,
+              is_admin = is_admin,
+              sex = sex,
+              school_id = school_id,
+              department = department,
+              attendance = attendance,
+              accumulated_time = accumulated_time,
+              accumulated_cost = accumulated_cost,
+              latencyCost = latencyCost, 
+            )
+            user.save()
+            serialized_user = NameSerializer(user)
+            return Response(serialized_user.data,status=201)
 
 ## 부원 수정
 class UpdateNameListView(APIView):
@@ -333,11 +355,14 @@ class PostCalendarNameView(APIView):
 class GetCalendarNameView(APIView):
     def get(self,request,eventId):
         namelist = Calendar_NameList.objects.filter(calendar_id = eventId)
-        if namelist.exists():
-            serailized_namelist = CalendarNameListSerializer(namelist,many=True)
-            return Response(serailized_namelist.data, status=200)
-        else:
-            return Response({'message':'해당하는 event가 없습니다.'},status=404)
+        
+        serailized_namelist = CalendarNameListSerializer(namelist,many=True)
+        return Response(serailized_namelist.data, status=200)
+    
+        # if namelist.exists():
+        # else:
+        #     return Response(serailized_namelist.data,status=404)
+
 class UpdateCalendarNameView(APIView):
     @swagger_auto_schema(request_body = update_calendar_name_params)
     def patch(self,request):      

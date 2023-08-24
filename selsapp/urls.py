@@ -33,7 +33,7 @@ urlpatterns = [
     # Calendar-name-list
     ## CREATE
     path('calendar-namelist/register',views.PostCalendarNameView.as_view(), name='postname'), # 캘린더 일정에 참석자 등록하기
-    path('calendar-namelist/search/<str:eventId>',views.GetCalendarNameView.as_view(), name='getnamelist'), # 캘린더 일정에 참석자 등록하기
+    path('calendar-namelist/search/<str:eventId>',views.GetCalendarNameView.as_view(), name='getnamelist'), # 캘린더 일정에 참석자 불러오기
     
     ## READ
 
