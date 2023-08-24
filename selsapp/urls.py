@@ -3,8 +3,6 @@ from . import views
 
 urlpatterns = [    
     # django-swagger test
-    # path('v1/test/get',views.GetTestView.as_view(),name='test'),
-    # path('v1/test/post',views.PostTestView.as_view(),name='posttest'),
 
     # Calendar
     ## CREATE
@@ -46,5 +44,11 @@ urlpatterns = [
 
     ## main function
     path('attendance',views.attendanceManageView.as_view(),name='attendanceManaage'),
+
+    ## reference 
+    path('reference/register',views.PostReferenceView.as_view(),name='postreferencetable'),
+    path('reference/search',views.GetReferenceView.as_view(),name='getreferencetable'),
+    path('reference/update',views.UpdateReferenceView.as_view(),name='updatereferencetable'),
+    path('reference/delete',views.DeleteReferenceView.as_view(),name='deletereference'),
 ]
 

@@ -36,6 +36,7 @@ class GetCalendarAllView(APIView):
                 calendar_events = Calendar.objects.all()
                 serialized_calendar = CalendarAllDataSerializer(calendar_events, many=True)
                 return Response(serialized_calendar.data, status=200)
+            
             elif range == 'one':
                 event = Calendar.objects.filter(eventId = event_id)
                 serialized_event = CalendarOneDataSerializer(event, many=True)
@@ -100,8 +101,8 @@ class PostCalendarView(APIView):
         start_date = request.data.get('startDate')
         end_date = request.data.get('endDate')
 
-        start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S')
-        end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S') 
+        start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M')
+        end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M') 
     
         activity_time = end_date - start_date
         activity_hours = int(activity_time.total_seconds() // 3600)
@@ -366,6 +367,92 @@ class DeleteCalendarNameAllView(APIView):
         else:
             return Response('잘못된 명령입니다.')
 
+## Section 3 : reference table
+class PostReferenceView(APIView):
+    @swagger_auto_schema(request_body = post_reference_params)
+    def post(self,request):
+        title = request.data.get('title')
+        upload_date_str = request.data.get('upload_date')
+        content = request.data.get('content')
+
+        upload_date= datetime.strptime(upload_date_str,'%Y-%m-%dT%H:%M')
+        
+        new_posts = Reference(
+                title = title,
+                upload_date = upload_date,
+                content = content,
+            )
+        new_posts.save()
+        serialized_posts = ReferenceSerializer(new_posts)
+        return Response(serialized_posts.data,status=201)
+
+class GetReferenceView(APIView):
+    @swagger_auto_schema(query_serializer=ReferenceSearchSerializer)
+    def get(self, request):
+        range = request.query_params.get('range')
+        id = request.query_params.get('id')
+
+        if range == 'all':
+            posts = Reference.objects.all()
+            if posts.exists():
+                serialized_posts = ReferenceSerializer(posts, many=True)
+                return Response(serialized_posts.data, status=200)
+            else:
+                return Response({'message': '게시물이 존재 하지 않습니다'}, status=404)
+            
+        elif range == 'one':
+            post = Reference.objects.filter(id = id)
+            if post.exists():
+                serialized_post = ReferenceSerializer(post, many=True)
+                return Response(serialized_post.data,status=200)
+            else:
+                return Response({'message': '해당하는 게시물을 찾을 수 없습니다.'}, status=404)
+
+class UpdateReferenceView(APIView):
+    @swagger_auto_schema(request_body=update_reference_params)
+    def patch(self,request):
+        id = request.data.get('id')
+        title = request.data.get('title')
+        upload_date_str = request.data.get('upload_date')
+        content = request.data.get('content')
+
+        upload_date= datetime.strptime(upload_date_str,'%Y-%m-%dT%H:%M')
+
+        post = Reference.objects.filter(id=id)
+        if post.exists():
+            post.update(title=title)
+            post.update(upload_date = upload_date)
+            post.update(content = content)
+            serialized_post = ReferenceSerializer(post, many=True)
+            return Response(serialized_post.data, status=200)
+        else:
+            return Response({'message': '해당하는 게시물을 찾을 수 없습니다.'},status=404)
+
+class DeleteReferenceView(APIView):
+    @swagger_auto_schema(query_serializer=ReferenceRemoveSerializer)
+    def delete(self, request):
+        range = request.query_params.get('range')
+        id = request.query_params.get('id')
+
+        if range=='all':
+            posts = Reference.objects.all()
+            if posts.exists():
+                posts.delete()
+                return Response({'message': '모든 데이터 삭제 완료'},status=200)
+            else:
+                return Response({'message': '삭제할 게시물이 존재하지 않습니다.'},status=404)
+        elif range=='one':
+            post = Reference.objects.filter(id=id)
+            if post.exists():
+                post.delete()
+                return Response({'message': '해당하는 게시물을 삭제헀습니다.'},status=200)
+            else:
+                return Response({'message': '삭제할 게시물이 존재하지 않습니다.'},status=404)
+
+
+
+
+    
 
 ## Section 4 : main function
 # patch 
@@ -478,3 +565,4 @@ class attendanceManageView(APIView):
             participant_info_obj.save()
         
         return Response('test')
+    

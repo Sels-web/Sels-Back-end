@@ -133,7 +133,8 @@ class Selslist(models.Model):
     accumulated_time = models.IntegerField(default=0) # 누적 봉사시간
     accumulated_cost = models.IntegerField(default=0) # 누적 지각비
     latencyCost = models.IntegerField(default=0) # 정산해야하는 지각비
-    
+    penalty_cnt = models.IntegerField(default=0) # 경고 횟수
+
     class Meta:
         db_table = 'Selslist'
 
@@ -163,10 +164,17 @@ class Calendar_NameList(models.Model):
 
 class Reference(models.Model):
     title = models.CharField(max_length = 1000)
-    file_location = models.FileField(upload_to='Uploaded Files/%y/%m/%d/', blank=True)
-    upload_date = models.DateField(auto_now = True)
-    content = models.TextField(max_length = 5000, default='')
+    upload_date = models.DateTimeField(default=timezone.now)
+    content = models.CharField(max_length = 5000, default='')
 
     class Meta:
         db_table = 'Reference'
+        managed = True
+
+class File_TB(models.Model):
+    reference_id = models.IntegerField()
+    file_location = models.FileField(upload_to='Uploaded Files/%y/%m/%d/', blank=True)
+
+    class Meta:
+        db_table = 'File_TB'
         managed = True

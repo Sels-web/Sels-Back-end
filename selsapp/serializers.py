@@ -24,6 +24,11 @@ class CalendarNameListSerializer(ModelSerializer):
         model = Calendar_NameList
         fields = '__all__'
 
+class ReferenceSerializer(ModelSerializer):
+    class Meta:
+        model = Reference
+        fields = '__all__'
+
 ## input 
 class NameListSearchSerializer(serializers.Serializer):
     name = serializers.CharField(help_text = '이름 검색',required=False)
@@ -45,3 +50,11 @@ class AttendanceManageSerializer(serializers.Serializer):
     event_id = serializers.CharField(help_text = 'event id', required=True)
     current_time = serializers.DateTimeField(help_text = '요청 시간', default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))
     school_id = serializers.CharField(help_text = '학번', required= True)
+
+class ReferenceSearchSerializer(serializers.Serializer):
+    range = serializers.CharField(help_text = '검색 범위:all, one', required= True)
+    id = serializers.IntegerField(help_text = '게시물 번호', required=False)
+
+class ReferenceRemoveSerializer(serializers.Serializer):
+    range = serializers.CharField(help_text='삭제 범위: all, one', required=True)
+    id = serializers.IntegerField(help_text = '게시물 번호', required=False)
