@@ -148,6 +148,7 @@ class Calendar(models.Model):
 
     class Meta:
         db_table = 'Calendar'
+        managed=True
 
 class Calendar_NameList(models.Model):
     calendar_id = models.CharField(max_length=100, default='')
