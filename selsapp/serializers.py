@@ -46,6 +46,11 @@ class CalendarSearchSerializer(serializers.Serializer):
     event_id = serializers.CharField(help_text = '특정 이벤트 검색', required=False)
     month = serializers.CharField(help_text = '월별 검색', required=False)
 
+class CalendarNamelistRemoveSerializer(serializers.Serializer):
+    range = serializers.CharField(help_text= '검색 범위:all, one',required=True)
+    event_id = serializers.CharField(help_text = '특정 이벤트', required=True)
+    school_id = serializers.CharField(help_text = '개인 삭제',required=False)
+    
 class AttendanceManageSerializer(serializers.Serializer):
     event_id = serializers.CharField(help_text = 'event id', required=True)
     current_time = serializers.DateTimeField(help_text = '요청 시간', default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))

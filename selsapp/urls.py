@@ -41,8 +41,9 @@ urlpatterns = [
     path('calendar-namelist',views.UpdateCalendarNameView.as_view(),name = 'updatename'), # 캘린더 일정 참석자 수정하기
     ## DELETE
     # 캘린더 일정 참석자 한명 제거
-    path('calendar-namelist/one/<str:eventId>/<str:school_id>',views.DeleteCalendarNameOneView.as_view(),name = 'deleteonename'), 
-    path('calendar-namelist/all/<str:eventId>',views.DeleteCalendarNameAllView.as_view(),name = 'deleteallname'), # 모든 참석자 제거
+    # path('calendar-namelist/one/<str:eventId>/<str:school_id>',views.DeleteCalendarNameOneView.as_view(),name = 'deleteonename'), 
+    # path('calendar-namelist/all/<str:eventId>',views.DeleteCalendarNameAllView.as_view(),name = 'deleteallname'), # 모든 참석자 제거
+    path('calendar-namelist/',views.DeleteCalendarNameView.as_view(),name = 'deletename'), # 모든 참석자 제거
 
     ## main function
     path('attendance',views.attendanceManageView.as_view(),name='attendanceManaage'),
