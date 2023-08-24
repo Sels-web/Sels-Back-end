@@ -100,8 +100,8 @@ class PostCalendarView(APIView):
         start_date = request.data.get('startDate')
         end_date = request.data.get('endDate')
 
-        start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S')
-        end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S') 
+        start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M')
+        end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M')
     
         activity_time = end_date - start_date
         activity_hours = int(activity_time.total_seconds() // 3600)
