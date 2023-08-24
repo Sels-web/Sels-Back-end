@@ -94,22 +94,39 @@ class GetCalendarAllView(APIView):
 class PostCalendarView(APIView):
     @swagger_auto_schema(request_body= post_calendar_params)
     def post(self,request):
-            event = CalendarAllDataSerializer(data = request.data)
-            if event.is_valid():
-                event_id = event.validated_data.get('eventId')
-                if Calendar.objects.filter(eventId=event_id).exists():
-                    return Response({'message': 'eventId already exists'}, status=400)
-                event.save()
-                return Response(event.data,status=201)
-            else:
-                return Response(event.errors, status=400)
+        title = request.data.get('title')
+        color = request.data.get('color')
+        event_id = request.data.get('eventId')
+        start_date = request.data.get('startDate')
+        end_date = request.data.get('endDate')
+
+        start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S')
+        end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S') 
+    
+        activity_time = end_date - start_date
+        activity_hours = int(activity_time.total_seconds() // 3600)
+        
+        if Calendar.objects.filter(eventId=event_id).exists():
+            return Response({'message': 'eventId already exists'}, status=400)
+        else:
+            event = Calendar(
+                title = title,
+                color = color,
+                startDate = start_date,
+                endDate = end_date,
+                eventId = event_id,
+                activity_time = activity_hours,
+            )
+            event.save()
+            serialized_event = CalendarAllDataSerializer(event)
+            return Response(serialized_event.data,status=201)
 
 ## 캘린더 일정 수정
 class UpdateCalendarView(APIView):
     @swagger_auto_schema(request_body = update_calendar_params)
     def patch(self,request):
         title = request.data.get('title')
-        color = request.data.get('Color')
+        color = request.data.get('color')
         event_id = request.data.get('eventId')
         start_date = request.data.get('startDate')
         end_date = request.data.get('endDate')
@@ -293,7 +310,7 @@ class PostCalendarNameView(APIView):
                name = name,
                state_point = 0,
                state = 'default',
-               attendanceTime =datetime.now()
+               attendanceTime =datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             )
             add_name.save()
             serialized_name = CalendarNameListSerializer(add_name)
@@ -351,4 +368,113 @@ class DeleteCalendarNameAllView(APIView):
 
 
 ## Section 4 : main function
+# patch 
+# input: eventId, 요청한 현재 시간, school_id
+# function : 
+# calendar_namelist:  state_point, state, attendanceTime
+# selslist: latencyCost 계산 및 누적 지각비 계산,attendance 출석 횟수 증가, accumulated_time, accumulated_cost
+# 지각비 계산하기 위해 출석 시간 찍히도록 변수 저장
+class attendanceManageView(APIView):
+    @swagger_auto_schema(query_serializer=AttendanceManageSerializer)
+    def patch(self, request):
+        event_id = request.query_params.get('event_id')
+        current_time_str = request.query_params.get('current_time')
+        school_id = request.query_params.get('school_id')
 
+        event = Calendar.objects.filter(eventId = event_id).first()
+
+
+        participant_set = Calendar_NameList.objects.filter(school_id = school_id)
+        participant_obj = Calendar_NameList.objects.filter(school_id = school_id).first()
+
+        participant_info_set = Selslist.objects.filter(school_id = school_id)
+        participant_info_obj = Selslist.objects.filter(school_id = school_id).first()
+
+        current_time = datetime.strptime(current_time_str, '%Y-%m-%dT%H:%M:%S')
+        
+        ## GET Calendar info
+        activity_time = event.activity_time ## 활동 시간 저장
+        
+        start_time = event.startDate ## 시작 시간 저장
+
+        ## 지각비 정산 helper
+        late_time = current_time - start_time ## 지각한 시간
+        late_time_second = int(late_time.total_seconds())
+
+        if(late_time_second <0):
+            late_time_second = 0
+
+        ## state helper
+        hours = late_time.seconds // 3600  # 초를 시간 단위로 변환
+        minutes = (late_time.seconds // 60) % 60  # 초를 분 단위로 변환
+        seconds = late_time.seconds % 60
+
+        print(f"지각한 초{late_time_second}")
+        ## UPDATE Calendar_namelist
+        # update: latencyCost, state_point, state, attendanceTime -> set 사용
+        # add : attendance, accumulated_time  -> obj 사용
+        if (late_time_second<=0):
+            participant_set.update(state_point = 1)
+            participant_info_set.update(latencyCost = 0)
+
+            participant_info_obj.attendance = participant_info_obj.attendance +1
+            participant_info_obj.accumulated_time = participant_info_obj.accumulated_time + activity_time
+            
+            participant_set.update(state = "일찍 도착")
+            participant_set.update(attendanceTime = current_time)
+            
+            participant_obj.save()    
+            participant_info_obj.save()
+
+
+        elif (late_time_second>0 and late_time_second < 60): # 지각X
+            participant_set.update(state_point = 1)
+            participant_info_set.update(latencyCost = 0)
+
+            participant_info_obj.attendance = participant_info_obj.attendance +1
+            participant_info_obj.accumulated_time = participant_info_obj.accumulated_time + activity_time
+            
+            participant_set.update(state = f"{hours}시간 {minutes}분 {seconds}초 지각")
+            participant_set.update(attendanceTime = current_time)
+
+            participant_obj.save()    
+            participant_info_obj.save()
+
+        elif (late_time_second >=60 and late_time_second <660): # 1-10분 지각
+            participant_set.update(state_point = 2)
+            #participant_info_set.update(latencyCost = 1000)
+            participant_info_obj.latencyCost = 1000
+            participant_info_obj.attendance = participant_info_obj.attendance +1
+            participant_info_obj.accumulated_time = participant_info_obj.accumulated_time + activity_time
+
+            participant_set.update(state = f"{hours}시간 {minutes}분 {seconds}초 지각")
+            participant_set.update(attendanceTime = current_time)
+
+            participant_obj.save()    
+            participant_info_obj.save()
+
+        elif (late_time_second>=660 and late_time_second <1800): # 11분 이상 지각
+            participant_set.update(state_point = 2)
+            #participant_info_set.update(latencyCost = 3000)
+            participant_info_obj.latencyCost = 3000
+            participant_info_obj.attendance = participant_info_obj.attendance +1
+            participant_info_obj.accumulated_time = participant_info_obj.accumulated_time +activity_time-1
+
+            participant_set.update(state = f"{hours}시간 {minutes}분 {seconds}초 지각")
+            participant_set.update(attendanceTime = current_time)
+
+            participant_obj.save()    
+            participant_info_obj.save()
+
+        else: # 30분 이상 지각 -> 노쇼
+            participant_set.update(state_point = 3)
+            #participant_info_set.update(latencyCost = 5000)
+            participant_info_obj.latencyCost = 5000
+
+            participant_set.update(state = f"{hours}시간 {minutes}분 {seconds}초 지각")
+            participant_set.update(attendanceTime = current_time)
+
+            participant_obj.save()    
+            participant_info_obj.save()
+        
+        return Response('test')

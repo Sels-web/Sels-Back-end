@@ -1,7 +1,8 @@
 from rest_framework.serializers import ModelSerializer
 from .models import *
 from rest_framework import serializers
-
+from datetime import datetime
+## return result
 class NameSerializer(ModelSerializer):
     class Meta:
         model = Selslist
@@ -23,6 +24,7 @@ class CalendarNameListSerializer(ModelSerializer):
         model = Calendar_NameList
         fields = '__all__'
 
+## input 
 class NameListSearchSerializer(serializers.Serializer):
     name = serializers.CharField(help_text = '이름 검색',required=False)
     school_id = serializers.CharField(help_text = '학번 검색', required=False)
@@ -38,3 +40,8 @@ class CalendarSearchSerializer(serializers.Serializer):
     range = serializers.CharField(help_text = '검색 범위:all, one, month', required=True)
     event_id = serializers.CharField(help_text = '특정 이벤트 검색', required=False)
     month = serializers.CharField(help_text = '월별 검색', required=False)
+
+class AttendanceManageSerializer(serializers.Serializer):
+    event_id = serializers.CharField(help_text = 'event id', required=True)
+    current_time = serializers.DateTimeField(help_text = '요청 시간', default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))
+    school_id = serializers.CharField(help_text = '학번', required= True)

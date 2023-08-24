@@ -13,15 +13,15 @@ post_calendar_params = openapi.Schema(
         'title': openapi.Schema(type=openapi.TYPE_STRING, description='Title of the event'),
         'color': openapi.Schema(type=openapi.TYPE_STRING, description='Color of the event'),
         'eventId': openapi.Schema(type=openapi.TYPE_STRING, description='Event ID'),
-        'startDate': openapi.Schema(type=openapi.TYPE_STRING,format=openapi.FORMAT_DATETIME, description='시작 시간'),
-        'endDate': openapi.Schema(type=openapi.TYPE_STRING,format=openapi.FORMAT_DATETIME, description='종료 시간'),        
+        'startDate': openapi.Schema(type=openapi.TYPE_STRING,format=openapi.FORMAT_DATETIME, default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),description='시작 시간'),
+        'endDate': openapi.Schema(type=openapi.TYPE_STRING,format=openapi.FORMAT_DATETIME, default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),description='종료 시간'),        
     }
 )
 update_calendar_params = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
             'title': openapi.Schema(type=openapi.TYPE_STRING, description='Title of the event'),
-            'Color': openapi.Schema(type=openapi.TYPE_STRING, description='Color of the event'),
+            'color': openapi.Schema(type=openapi.TYPE_STRING, description='Color of the event'),
             'eventId': openapi.Schema(type=openapi.TYPE_STRING, description='Event ID'),
             'startDate': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Start date of the event (FORMAT_DATE: ex)2024-01-27T12:30)'),
             'endDate': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='End date of the event (FORMAT_DATE: ex)2024-01-27T16:30)')
