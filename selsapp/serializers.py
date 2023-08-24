@@ -26,7 +26,7 @@ class CalendarNameListSerializer(ModelSerializer):
 class NameListSearchSerializer(serializers.Serializer):
     name = serializers.CharField(help_text = '이름 검색',required=False)
     school_id = serializers.CharField(help_text = '학번 검색', required=False)
-    latencyCost = serializers.IntegerField(help_text='지각비', default=0)
+    latencyCost = serializers.IntegerField(help_text='지각비',required=False,default=0)
     order      = serializers.CharField(help_text='정렬 순서:name, attendance, accumulated_time 사용 가능 내림차순: 앞에 - 붙이기', default='name')
     
 class NameListRemoveSerializer(serializers.Serializer):
