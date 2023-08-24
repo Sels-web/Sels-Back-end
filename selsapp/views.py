@@ -36,20 +36,33 @@ class GetCalendarAllView(APIView):
                 calendar_events = Calendar.objects.all()
                 serialized_calendar = CalendarAllDataSerializer(calendar_events, many=True)
                 return Response(serialized_calendar.data, status=200)
+            
             elif range == 'one':
                 event = Calendar.objects.filter(eventId = event_id)
                 serialized_event = CalendarOneDataSerializer(event, many=True)
 
-                namelist = Calendar_NameList.objects.filter(calendar_id = event_id)
-                serialized_namelist = CalendarNameListSerializer(namelist, many=True)
+                # namelist = Calendar_NameList.objects.filter(calendar_id = event_id)
+                # serialized_namelist = CalendarNameListSerializer(namelist, many=True)
 
-                combined_data = list(serialized_event.data)  # serialized_event 데이터를 리스트로 변환
+                # combined_data = list(serialized_event.data)  # serialized_event 데이터를 리스트로 변환
 
-                # serialized_namelist 데이터에서 필요한 필드만 추출하여 병합한 리스트에 추가
-                for namelist_item in serialized_namelist.data:
-                    combined_data.append(namelist_item)
-                if combined_data:
-                    return Response(combined_data,status=200)
+               
+                # # serialized_namelist 데이터에서 필요한 필드만 추출하여 병합한 리스트에 추가
+                # for namelist_item in serialized_namelist.data:
+                #     combined_data.append(namelist_item)
+                # for namelist_item in serialized_namelist.data:
+                #     combined_data.append({
+                #         "id": namelist_item["id"],
+                #         "calendar_id": namelist_item["calendar_id"],
+                #         "school_id": namelist_item["school_id"],
+                #         "name": namelist_item["name"],
+                #         "state_point": namelist_item["state_point"],
+                #         "state": namelist_item["state"],
+                #         "attendanceTime": namelist_item["attendanceTime"]
+                #     })
+
+                if serialized_event:
+                    return Response(serialized_event.data,status=200)
                 else:
                     return Response({'message': 'eventId is not exists'}, status=404)
                 
@@ -317,7 +330,14 @@ class PostCalendarNameView(APIView):
             return Response(serialized_name.data, status=201)       
         else:
             return Response({'message': 'eventId is not exists'}, status=404)
-    
+class GetCalendarNameView(APIView):
+    def get(self,request,eventId):
+        namelist = Calendar_NameList.objects.filter(calendar_id = eventId)
+        if namelist.exists():
+            serailized_namelist = CalendarNameListSerializer(namelist,many=True)
+            return Response(serailized_namelist.data, status=200)
+        else:
+            return Response({'message':'해당하는 event가 없습니다.'},status=404)
 class UpdateCalendarNameView(APIView):
     @swagger_auto_schema(request_body = update_calendar_name_params)
     def patch(self,request):      
@@ -366,7 +386,87 @@ class DeleteCalendarNameAllView(APIView):
         else:
             return Response('잘못된 명령입니다.')
 
+## Section 3 : reference table
+class PostReferenceView(APIView):
+    @swagger_auto_schema(request_body = post_reference_params)
+    def post(self,request):
+        title = request.data.get('title')
+        upload_date_str = request.data.get('upload_date')
+        content = request.data.get('content')
 
+        upload_date= datetime.strptime(upload_date_str,'%Y-%m-%dT%H:%M')
+        
+        new_posts = Reference(
+                title = title,
+                upload_date = upload_date,
+                content = content,
+            )
+        new_posts.save()
+        serialized_posts = ReferenceSerializer(new_posts)
+        return Response(serialized_posts.data,status=201)
+
+class GetReferenceView(APIView):
+    @swagger_auto_schema(query_serializer=ReferenceSearchSerializer)
+    def get(self, request):
+        range = request.query_params.get('range')
+        id = request.query_params.get('id')
+
+        if range == 'all':
+            posts = Reference.objects.all()
+            if posts.exists():
+                serialized_posts = ReferenceSerializer(posts, many=True)
+                return Response(serialized_posts.data, status=200)
+            else:
+                return Response({'message': '게시물이 존재 하지 않습니다'}, status=404)
+            
+        elif range == 'one':
+            post = Reference.objects.filter(id = id)
+            if post.exists():
+                serialized_post = ReferenceSerializer(post, many=True)
+                return Response(serialized_post.data,status=200)
+            else:
+                return Response({'message': '해당하는 게시물을 찾을 수 없습니다.'}, status=404)
+
+class UpdateReferenceView(APIView):
+    @swagger_auto_schema(request_body=update_reference_params)
+    def patch(self,request):
+        id = request.data.get('id')
+        title = request.data.get('title')
+        upload_date_str = request.data.get('upload_date')
+        content = request.data.get('content')
+
+        upload_date= datetime.strptime(upload_date_str,'%Y-%m-%dT%H:%M')
+
+        post = Reference.objects.filter(id=id)
+        if post.exists():
+            post.update(title=title)
+            post.update(upload_date = upload_date)
+            post.update(content = content)
+            serialized_post = ReferenceSerializer(post, many=True)
+            return Response(serialized_post.data, status=200)
+        else:
+            return Response({'message': '해당하는 게시물을 찾을 수 없습니다.'},status=404)
+
+class DeleteReferenceView(APIView):
+    @swagger_auto_schema(query_serializer=ReferenceRemoveSerializer)
+    def delete(self, request):
+        range = request.query_params.get('range')
+        id = request.query_params.get('id')
+
+        if range=='all':
+            posts = Reference.objects.all()
+            if posts.exists():
+                posts.delete()
+                return Response({'message': '모든 데이터 삭제 완료'},status=200)
+            else:
+                return Response({'message': '삭제할 게시물이 존재하지 않습니다.'},status=404)
+        elif range=='one':
+            post = Reference.objects.filter(id=id)
+            if post.exists():
+                post.delete()
+                return Response({'message': '해당하는 게시물을 삭제헀습니다.'},status=200)
+            else:
+                return Response({'message': '삭제할 게시물이 존재하지 않습니다.'},status=404)
 ## Section 4 : main function
 # patch 
 # input: eventId, 요청한 현재 시간, school_id
@@ -376,13 +476,12 @@ class DeleteCalendarNameAllView(APIView):
 # 지각비 계산하기 위해 출석 시간 찍히도록 변수 저장
 class attendanceManageView(APIView):
     @swagger_auto_schema(query_serializer=AttendanceManageSerializer)
-    def patch(self, request):
+    def post(self, request):
         event_id = request.query_params.get('event_id')
         current_time_str = request.query_params.get('current_time')
         school_id = request.query_params.get('school_id')
 
         event = Calendar.objects.filter(eventId = event_id).first()
-
 
         participant_set = Calendar_NameList.objects.filter(school_id = school_id)
         participant_obj = Calendar_NameList.objects.filter(school_id = school_id).first()
@@ -478,3 +577,4 @@ class attendanceManageView(APIView):
             participant_info_obj.save()
         
         return Response('test')
+    

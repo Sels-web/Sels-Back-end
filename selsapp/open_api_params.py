@@ -23,8 +23,8 @@ update_calendar_params = openapi.Schema(
             'title': openapi.Schema(type=openapi.TYPE_STRING, description='Title of the event'),
             'color': openapi.Schema(type=openapi.TYPE_STRING, description='Color of the event'),
             'eventId': openapi.Schema(type=openapi.TYPE_STRING, description='Event ID'),
-            'startDate': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Start date of the event (FORMAT_DATE: ex)2024-01-27T12:30)'),
-            'endDate': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='End date of the event (FORMAT_DATE: ex)2024-01-27T16:30)')
+            'startDate': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME,default=datetime.now().strftime('%Y-%m-%dT%H:%M'), description='Start date of the event (FORMAT_DATE: ex)2024-01-27T12:30)'),
+            'endDate': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME,default=datetime.now().strftime('%Y-%m-%dT%H:%M'), description='End date of the event (FORMAT_DATE: ex)2024-01-27T16:30)')
         }
     )
 
@@ -45,7 +45,7 @@ update_calendar_name_params = openapi.Schema(
         'school_id': openapi.Schema(type=openapi.TYPE_STRING, description='school id'),
         'state_point': openapi.Schema(type=openapi.TYPE_INTEGER, description='출석 여부 point'),
         'state': openapi.Schema(type=openapi.TYPE_STRING, description='출석 상태'),
-        'attendanceTime': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='출석 시간'),
+        'attendanceTime': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME,default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), description='출석 시간'),
     }
 )
 
@@ -65,3 +65,44 @@ post_selslist_params = openapi.Schema(
     }
 )
 
+post_reference_params = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'title': openapi.Schema(
+            type=openapi.TYPE_STRING,
+              description='게시물 제목'
+              ),
+        'upload_date': openapi.Schema(
+            type=openapi.TYPE_STRING, 
+            format=openapi.FORMAT_DATETIME, 
+            description='생성 날짜', default=datetime.now().strftime('%Y-%m-%dT%H:%M')
+            ),
+        'content': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='내용'
+            ),
+    }
+)
+
+update_reference_params = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'id': openapi.Schema(
+            type=openapi.TYPE_INTEGER,
+            description='게시물 번호',
+        ),
+        'title': openapi.Schema(
+            type=openapi.TYPE_STRING,
+              description='게시물 제목'
+              ),
+        'upload_date': openapi.Schema(
+            type=openapi.TYPE_STRING, 
+            format=openapi.FORMAT_DATETIME, 
+            description='생성 날짜', default=datetime.now().strftime('%Y-%m-%dT%H:%M')
+            ),
+        'content': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='내용'
+            ),
+    }
+)
