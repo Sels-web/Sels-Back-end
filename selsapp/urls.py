@@ -2,8 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [    
-    # django-swagger test
-
     # Calendar
     ## CREATE
     path('calendar/register',views.PostCalendarView.as_view(),name='postcalendar'), # 캘린더 등록하기
@@ -21,8 +19,6 @@ urlpatterns = [
     path('namelist/register',views.PostNameListView.as_view(),name='postname'), # 명단 등록하기
     ## READ
     path('namelist/search',views.GetnameListView.as_view(),name='getallname'), # 전체 명단 불러오기 by function key
-    #path('namelist/search/<str:name>',views.GetOneNameView.as_view(),name='getonename'), # 이름으로 검색
-    #path('namelist/detail/<str:school_id>',views.GetOnedetailView.as_view(),name='getdetail'),#부원 상세정보 검색
     ## UPDATE
     path('namelist/update',views.UpdateNameListView.as_view(),name='updatename'), # 명단 수정하기
     ## DELETE
@@ -31,17 +27,13 @@ urlpatterns = [
     # Calendar-name-list
     ## CREATE
     path('calendar-namelist/register',views.PostCalendarNameView.as_view(), name='postname'), # 캘린더 일정에 참석자 등록하기
-    path('calendar-namelist/search/<str:eventId>',views.GetCalendarNameView.as_view(), name='getnamelist'), # 캘린더 일정에 참석자 불러오기
-    
     ## READ
-
+    path('calendar-namelist/search/<str:eventId>',views.GetCalendarNameView.as_view(), name='getnamelist'), # 캘린더 일정에 참석자 불러오기
     ## UPDATE
-    #path('calendar-namelist',views.UpdateCalendarNameView.as_view(),name = 'updatename'), # 캘린더 일정 참석자 수정하기
+    path('calendar-namelist',views.UpdateCalendarNameView.as_view(),name = 'updatename'), # 캘린더 일정 참석자 수정하기
     ## DELETE
     # 캘린더 일정 참석자 한명 제거
-    # path('calendar-namelist/one/<str:eventId>/<str:school_id>',views.DeleteCalendarNameOneView.as_view(),name = 'deleteonename'), 
-    # path('calendar-namelist/all/<str:eventId>',views.DeleteCalendarNameAllView.as_view(),name = 'deleteallname'), # 모든 참석자 제거
-    path('calendar-namelist/',views.DeleteCalendarNameView.as_view(),name = 'deletename'), # 모든 참석자 제거
+    path('calendar-namelist/',views.DeleteCalendarNameView.as_view(),name = 'deletename'), # 참석자 제거
 
     ## main function
     path('attendance',views.attendanceManageView.as_view(),name='attendanceManaage'),

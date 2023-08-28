@@ -43,8 +43,6 @@ update_calendar_name_params = openapi.Schema(
         'eventId': openapi.Schema(type=openapi.TYPE_STRING, description='Event ID'),
         'name': openapi.Schema(type=openapi.TYPE_STRING, description='일정에 참가하는 이름'),
         'school_id': openapi.Schema(type=openapi.TYPE_STRING, description='school id'),
-        # 'state': openapi.Schema(type=openapi.TYPE_INTEGER, description='출석 여부 point'),
-        # 'late_time': openapi.Schema(type=openapi.TYPE_STRING, description='지각 시간'),
         'attendanceTime': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME,default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), description='출석 시간'),
     }
 )
@@ -119,5 +117,25 @@ update_reference_params = openapi.Schema(
             type=openapi.TYPE_STRING,
             description='내용'
             ),
+    }
+)
+
+post_attendance_params= openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'event_id':openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='event id'
+        ),
+        'current_time':openapi.Schema(
+            type=openapi.TYPE_STRING,
+            format=openapi.FORMAT_DATETIME,
+            description='요청 시간',
+            default = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        ),
+        'school_id':openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='학번'
+        ),
     }
 )

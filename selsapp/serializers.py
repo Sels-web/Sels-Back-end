@@ -33,8 +33,8 @@ class ReferenceSerializer(ModelSerializer):
 class NameListSearchSerializer(serializers.Serializer):
     name = serializers.CharField(help_text = '이름 검색',required=False)
     school_id = serializers.CharField(help_text = '학번 검색', required=False)
-    latencyCost = serializers.IntegerField(help_text='지각비',required=False,default=0)
-    order      = serializers.CharField(help_text='정렬 순서:name, attendance, accumulated_time 사용 가능 내림차순: 앞에 - 붙이기', default='name')
+    latencyCost = serializers.IntegerField(help_text='지각비',required=False)
+    order = serializers.CharField(help_text='정렬 순서:name, attendance, accumulated_time 사용 가능 내림차순: 앞에 - 붙이기', default='name')
     
 class NameListRemoveSerializer(serializers.Serializer):
     range = serializers.CharField(help_text='삭제 범위: all, one', required=True)
@@ -50,7 +50,7 @@ class CalendarNamelistRemoveSerializer(serializers.Serializer):
     range = serializers.CharField(help_text= '검색 범위:all, one',required=True)
     event_id = serializers.CharField(help_text = '특정 이벤트', required=True)
     school_id = serializers.CharField(help_text = '개인 삭제',required=False)
-    
+
 class ReferenceSearchSerializer(serializers.Serializer):
     range = serializers.CharField(help_text = '검색 범위:all, one', required= True)
     id = serializers.IntegerField(help_text = '게시물 번호', required=False)
@@ -59,7 +59,3 @@ class ReferenceRemoveSerializer(serializers.Serializer):
     range = serializers.CharField(help_text='삭제 범위: all, one', required=True)
     id = serializers.IntegerField(help_text = '게시물 번호', required=False)
 
-class AttendanceManageSerializer(serializers.Serializer):
-    event_id = serializers.CharField(help_text = 'event id', required=True)
-    current_time = serializers.DateTimeField(help_text = '요청 시간', default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))
-    school_id = serializers.CharField(help_text = '학번', required= True)
