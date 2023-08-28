@@ -143,7 +143,12 @@ class DeleteCalendarView(APIView):
         
         if is_exist:
             event = Calendar.objects.filter(eventId = eventId)
-            event.delete()
+            namelist = Calendar_NameList.objects.filter(calendar_id = eventId)
+            if namelist.exists():
+                event.delete()
+                namelist.delete()
+            else:
+                event.delete()
             return Response({'message':'deleted'},status=200)
         else:
             return Response({'message': 'eventId is not exists'}, status=404)
@@ -619,5 +624,5 @@ class CalculateManagementView(APIView):
             latecomer.latency_cost = 0            
             latecomer.calculated = 1
             latecomer.save()
-            
+
         return Response({'message':'completed'})
