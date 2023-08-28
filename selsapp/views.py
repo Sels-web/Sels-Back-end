@@ -182,11 +182,7 @@ class GetnameListView(APIView):
                 else:
                     return Response({'message':'존재하지 않습니다.'})
             elif latency_cost:
-                is_exist = Selslist.objects.filter(latencyCost__gt = 0).exists()
-                if is_exist:
-                    namelist = Selslist.objects.filter(latencyCost__gt = 0).order_by(order)
-                else:
-                    namelist = Selslist.objects.all().order_by(order)
+                namelist = Selslist.objects.filter(latencyCost__gt = 0).order_by(order)
             elif (latency_cost and name):
                 is_exist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).exists()
                 if is_exist:
