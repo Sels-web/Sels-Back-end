@@ -189,8 +189,8 @@ class GetnameListView(APIView):
                     participant_events = Calendar_NameList.objects.filter(school_id = name.school_id)
                     if participant_events.exists():
                         # 참석 횟수
-                        name.attendance = participant_events.exclude(state = 4).count()
-
+                        name.attendance = participant_events.exclude(Q(state=0)|Q(state=4)).count()
+ 
                         # 총 봉사시간
                         total_service_time = participant_events.aggregate(total_service_time=Sum('service_time'))['total_service_time']
                         name.accumulated_time = total_service_time
@@ -306,8 +306,8 @@ class DeleteNameListView(APIView):
         range = request.query_params.get('range')
         name = request.query_params.get('name')
         school_id = request.query_params.get('school_id')
-        
-        if range == all:
+
+        if range == 'all':
             data = Selslist.objects.all()
             if data.exists():
                 data.delete()
@@ -359,8 +359,9 @@ class PostCalendarNameView(APIView):
                late_time = 'default',
                attendanceTime =event_info.startDate,
                latency_cost = 0,
-               service_time = event_info.activity_time,
+               service_time = 0,
                penalty = 0,
+               calculated = 0,
             )
             add_name.save()
             serialized_name = CalendarNameListSerializer(add_name)
@@ -577,6 +578,7 @@ class attendanceManageView(APIView):
             participant.update(late_time = latetime_str)
             participant.update(attendanceTime = current_time)
             participant.update(latency_cost = 0)
+            participant.update(service_time = event.activity_time)
             
         elif (latetime_second>0 and latetime_second < 60): # 지각X:
 
@@ -584,6 +586,7 @@ class attendanceManageView(APIView):
             participant.update(late_time = latetime_str)
             participant.update(attendanceTime = current_time)
             participant.update(latency_cost = 0)
+            participant.update(service_time = event.activity_time)
 
         elif (latetime_second >=60 and latetime_second <660): # 1-10분 지각
 
@@ -591,12 +594,16 @@ class attendanceManageView(APIView):
             participant.update(late_time = latetime_str)
             participant.update(attendanceTime = current_time)
             participant.update(latency_cost = 1000)
+            participant.update(service_time = event.activity_time)
         
         elif (latetime_second>=660 and latetime_second <1800): # 11분 이상 지각
             participant.update(state=3)
             participant.update(late_time = latetime_str)
             participant.update(attendanceTime = current_time)
             participant.update(latency_cost = 3000)
+            service_time = event.activity_time -1
+            print(service_time)
+            participant.update(service_time = service_time)
     
         elif(latetime_second >=1800):
             participant.update(state=4)
@@ -604,6 +611,7 @@ class attendanceManageView(APIView):
             participant.update(attendanceTime = current_time)
             participant.update(latency_cost = 5000)
             participant.update(penalty = 1)
+            participant.update(service_time =0)
 
         return Response('complete',status=200)
     

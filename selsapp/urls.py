@@ -24,10 +24,8 @@ urlpatterns = [
     #path('namelist/search/<str:name>',views.GetOneNameView.as_view(),name='getonename'), # 이름으로 검색
     #path('namelist/detail/<str:school_id>',views.GetOnedetailView.as_view(),name='getdetail'),#부원 상세정보 검색
     ## UPDATE
-    #path('namelist/update',views.UpdateNameListView.as_view(),name='updatename'), # 명단 수정하기
+    path('namelist/update',views.UpdateNameListView.as_view(),name='updatename'), # 명단 수정하기
     ## DELETE
-    # path('namelist/delete-one/<str:school_id>/<str:name>',views.DeleteOneNameListView.as_view(),name='deleteonename'), # 명단 삭제하기
-    # path('nameList/delete-all',views.DeleteAllNameListView.as_view(),name='deleteallname'), # 모든 명단 삭제하기
     path('namelist/delete',views.DeleteNameListView.as_view(),name='deletename'), # 모든 명단 삭제하기
     
     # Calendar-name-list
@@ -38,7 +36,7 @@ urlpatterns = [
     ## READ
 
     ## UPDATE
-    path('calendar-namelist',views.UpdateCalendarNameView.as_view(),name = 'updatename'), # 캘린더 일정 참석자 수정하기
+    #path('calendar-namelist',views.UpdateCalendarNameView.as_view(),name = 'updatename'), # 캘린더 일정 참석자 수정하기
     ## DELETE
     # 캘린더 일정 참석자 한명 제거
     # path('calendar-namelist/one/<str:eventId>/<str:school_id>',views.DeleteCalendarNameOneView.as_view(),name = 'deleteonename'), 
