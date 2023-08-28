@@ -41,26 +41,6 @@ class GetCalendarAllView(APIView):
                 event = Calendar.objects.filter(eventId = event_id)
                 serialized_event = CalendarOneDataSerializer(event, many=True)
 
-                # namelist = Calendar_NameList.objects.filter(calendar_id = event_id)
-                # serialized_namelist = CalendarNameListSerializer(namelist, many=True)
-
-                # combined_data = list(serialized_event.data)  # serialized_event 데이터를 리스트로 변환
-
-               
-                # # serialized_namelist 데이터에서 필요한 필드만 추출하여 병합한 리스트에 추가
-                # for namelist_item in serialized_namelist.data:
-                #     combined_data.append(namelist_item)
-                # for namelist_item in serialized_namelist.data:
-                #     combined_data.append({
-                #         "id": namelist_item["id"],
-                #         "calendar_id": namelist_item["calendar_id"],
-                #         "school_id": namelist_item["school_id"],
-                #         "name": namelist_item["name"],
-                #         "state_point": namelist_item["state_point"],
-                #         "state": namelist_item["state"],
-                #         "attendanceTime": namelist_item["attendanceTime"]
-                #     })
-
                 if serialized_event:
                     return Response(serialized_event.data,status=200)
                 else:
@@ -115,7 +95,6 @@ class PostCalendarView(APIView):
 
         start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M')
         end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M')
-    
         activity_time = end_date - start_date
         activity_hours = int(activity_time.total_seconds() // 3600)
         
@@ -183,6 +162,7 @@ class GetnameListView(APIView):
         name = request.query_params.get('name')
         school_id = request.query_params.get('school_id')
 
+
         if school_id:
             is_exist = Selslist.objects.filter(school_id__icontains = school_id).exists()
             if is_exist:
@@ -200,6 +180,33 @@ class GetnameListView(APIView):
                 else:
                     return Response({'message': '존재하지 않습니다.'}, status=404)
             else: 
+                namelist = Selslist.objects.all()
+                for name in namelist:   # 전체 이름 조회로 전부다 수행
+                    # attendance = models.IntegerField(default=0) # 출석횟수
+                    # accumulated_time = models.IntegerField(default=0) # 누적 봉사시간
+                    # accumulated_cost = models.IntegerField(default=0) # 누적 지각비
+                    # latencyCost = models.IntegerField(default=0) # 정산해야하는 지각비
+                    participant_events = Calendar_NameList.objects.filter(school_id = name.school_id)
+                    if participant_events.exists():
+                        # 참석 횟수
+                        name.attendance = participant_events.exclude(state = 4).count()
+
+                        # 총 봉사시간
+                        total_service_time = participant_events.aggregate(total_service_time=Sum('service_time'))['total_service_time']
+                        name.accumulated_time = total_service_time
+
+                        # 지각비
+
+                        # 누적 지각비
+                        # total_latency_cost = participant_events.aggregate(total_latency_cost=Sum('latency_cost'))['total_latency_cost']
+                        # name.accumulated_cost = total_latency_cost
+
+                        #경고 횟수
+                        name.penalty_cnt = participant_events.filter(penalty = 1).count()
+                        
+                        name.save()
+                        #print(f"총 출석 횟수:{name.attendance} 누적 봉사 시간:{name.accumulated_time} 지각비:{name.latencyCost}")
+
                 if (latency_cost > 0):
                     namelist = Selslist.objects.filter(latencyCost__gt = latency_cost).order_by(order)
                 else:
@@ -235,10 +242,10 @@ class PostNameListView(APIView):
         sex = request.data.get('sex')
         school_id = request.data.get('school_id')
         department = request.data.get('department')
-        attendance = request.data.get('attendance')
-        accumulated_time = request.data.get('accumulated_time')
-        accumulated_cost = request.data.get('accumulated_cost')
-        latencyCost = request.data.get('latencyCost')
+        # attendance = request.data.get('attendance')
+        # accumulated_time = request.data.get('accumulated_time')
+        # accumulated_cost = request.data.get('accumulated_cost')
+        # latencyCost = request.data.get('latencyCost')
 
         if Selslist.objects.filter(school_id=school_id).exists():
             return Response({'message': 'school already exists'}, status=400)
@@ -249,10 +256,11 @@ class PostNameListView(APIView):
               sex = sex,
               school_id = school_id,
               department = department,
-              attendance = attendance,
-              accumulated_time = accumulated_time,
-              accumulated_cost = accumulated_cost,
-              latencyCost = latencyCost, 
+              attendance = 0,
+              accumulated_time = 0,
+              accumulated_cost = 0,
+              latencyCost = 0, 
+              penalty_cnt = 0,
             )
             user.save()
             serialized_user = NameSerializer(user)
@@ -260,7 +268,7 @@ class PostNameListView(APIView):
 
 ## 부원 수정
 class UpdateNameListView(APIView):
-    @swagger_auto_schema(request_body=post_selslist_params)
+    @swagger_auto_schema(request_body=update_selslist_params)
     def patch(self,request):
         name = request.data.get('name')
         is_admin = request.data.get('is_admin')
@@ -271,9 +279,9 @@ class UpdateNameListView(APIView):
         accumulated_time = request.data.get('accumulated_time')
         accumulated_cost = request.data.get('accumulated_cost')
         latencyCost = request.data.get('latencyCost')
-        
-        is_exist = Selslist.objects.filter(school_id = school_id).exists()
+        penalty_cnt = request.data.get('penalty_cnt')
 
+        is_exist = Selslist.objects.filter(school_id = school_id).exists()
         if is_exist:
             user = Selslist.objects.filter(school_id = school_id)
             user.update(school_id = school_id)
@@ -285,6 +293,7 @@ class UpdateNameListView(APIView):
             user.update(accumulated_time = accumulated_time)
             user.update(accumulated_cost = accumulated_cost)
             user.update(latencyCost = latencyCost)
+            user.update(penalty_cnt = penalty_cnt)
             
             serialized_user = NameSerializer(user, many=True)
             return Response(serialized_user.data,status=200)
@@ -337,15 +346,21 @@ class PostCalendarNameView(APIView):
         event_id = request.data.get('calendar_id')
         name = request.data.get('name')
         school_id = request.data.get('school_id')
-        is_exists = Calendar.objects.filter(eventId = event_id).exists()
-        if is_exists:
+        
+        event = Calendar.objects.filter(eventId = event_id)
+        event_info = event.first()
+
+        if event.exists():
             add_name = Calendar_NameList(
                calendar_id = event_id,
                school_id = school_id,
                name = name,
                state = 0,
                late_time = 'default',
-               attendanceTime =datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+               attendanceTime =event_info.startDate,
+               latency_cost = 0,
+               service_time = event_info.activity_time,
+               penalty = 0,
             )
             add_name.save()
             serialized_name = CalendarNameListSerializer(add_name)
@@ -354,62 +369,66 @@ class PostCalendarNameView(APIView):
             return Response({'message': 'eventId is not exists'}, status=404)
 class GetCalendarNameView(APIView):
     def get(self,request,eventId):
-        namelist = Calendar_NameList.objects.filter(calendar_id = eventId)
-        
+        namelist = Calendar_NameList.objects.filter(calendar_id = eventId)     
         serailized_namelist = CalendarNameListSerializer(namelist,many=True)
         return Response(serailized_namelist.data, status=200)
-    
-        # if namelist.exists():
-        # else:
-        #     return Response(serailized_namelist.data,status=404)
 
+## 수정필요-2023.08.25
 class UpdateCalendarNameView(APIView):
     @swagger_auto_schema(request_body = update_calendar_name_params)
     def patch(self,request):      
         event_id = request.data.get('eventId')
         name = request.data.get('name')
         school_id = request.data.get('school_id')
-        state_point = request.data.get('state_point')
-        state = request.data.get('state')
+        # state = request.data.get('state')
+        # late_time = request.data.get('late_time')
         attendanceTime = request.data.get('attendanceTime')
 
         is_exists = Calendar.objects.filter(eventId = event_id).exists()
 
-        if is_exists:    
-            user = Calendar_NameList.objects.filter(school_id = school_id, calendar_id = event_id)
-            user_exists = user.exists()
-            if user_exists:
-                user.update(calendar_id = event_id)
-                user.update(name = name)
-                user.update(school_id = school_id)
-                user.update(state_point = state_point)
-                user.update(state = state)
-                user.update(attendanceTime = attendanceTime)
+        participant_info = Selslist.objects.filter(school_id = school_id).first()
+        event = Calendar.objects.filter(eventId = event_id).first()
+        activity_time = event.activity_time
 
-                serialized_user = CalendarNameListSerializer(user, many=True)
-                return Response(serialized_user.data)
+        if is_exists:    
+            participant = Calendar_NameList.objects.filter(school_id = school_id, calendar_id = event_id).first()
+            user_exists = Calendar_NameList.objects.filter(school_id=school_id,calendar_id = event_id).exists()
+            
+            if user_exists:
+                participant.calendar_id = event_id
+                participant.name = name
+                participant.school_id = school_id
+
+                current_time = datetime.strptime(attendanceTime, '%Y-%m-%dT%H:%M:%S')
+                
+                ## GET Calendar info
+                #print(activity_time)
+                start_time = event.startDate ## 시작 시간 저장
+
+                ## 지각비 정산 helper
+                latetime = current_time - start_time ## 지각한 시간
+                latetime_second = int(latetime.total_seconds())
+
+                #print(latetime_second)
+
+                if(latetime_second <=0):
+                    latetime_str = '0:00:00'
+                
+                else:
+                    ## state helper
+                    hours = latetime.seconds // 3600  # 초를 시간 단위로 변환
+                    minutes = (latetime.seconds // 60) % 60  # 초를 분 단위로 변환
+                    seconds = latetime.seconds % 60
+
+                    latetime_str = f"{hours}:{minutes}:{seconds}"
+                
+                serialized_user = CalendarNameListSerializer(participant)
+                return Response(serialized_user.data, status=201)
             else:
                 return Response({'message': 'user is not exists'}, status=404)
         else: 
             return Response({'message': 'eventId is not exists'}, status=404)
-# class DeleteCalendarNameOneView(APIView):
-#     def delete(self,request,eventId, school_id):
-#         user = Calendar_NameList.objects.filter(school_id = school_id, calendar_id = eventId)
-#         user_exists = user.exists()
-#         if user_exists:
-#             user.delete()
-#             return Response('삭제 완료',status=200)
-#         else:
-#             return Response({'message': 'user is not exists'}, status=404)
-# class DeleteCalendarNameAllView(APIView):
-#     def delete(self,request,eventId):
-#         event = Calendar_NameList.objects.filter(calendar_id = eventId).all()
-#         event_exists = event.exists()
-#         if event_exists:
-#             event.delete()
-#             return Response('모든 데이터 삭제 완료')
-#         else:
-#             return Response('잘못된 명령입니다.')
+
 class DeleteCalendarNameView(APIView):
     @swagger_auto_schema(query_serializer=CalendarNamelistRemoveSerializer)
     def delete(self,request):
@@ -521,6 +540,8 @@ class DeleteReferenceView(APIView):
 # calendar_namelist:  state_point, state, attendanceTime
 # selslist: latencyCost 계산 및 누적 지각비 계산,attendance 출석 횟수 증가, accumulated_time, accumulated_cost
 # 지각비 계산하기 위해 출석 시간 찍히도록 변수 저장
+
+## 수정필요-2023.08.25
 class attendanceManageView(APIView):
     @swagger_auto_schema(query_serializer=AttendanceManageSerializer)
     def post(self, request):
@@ -530,24 +551,14 @@ class attendanceManageView(APIView):
 
         event = Calendar.objects.filter(eventId = event_id).first()
 
-        # participant_set = Calendar_NameList.objects.filter(school_id = school_id)
-        participant = Calendar_NameList.objects.filter(school_id = school_id).first()
-
-        # participant_info_set = Selslist.objects.filter(school_id = school_id)
-        participant_info = Selslist.objects.filter(school_id = school_id).first()
-
-        current_time = datetime.strptime(current_time_str, '%Y-%m-%dT%H:%M:%S')
-        
-        ## GET Calendar info
-        activity_time = event.activity_time ## 활동 시간 저장
-        #print(activity_time)
         start_time = event.startDate ## 시작 시간 저장
 
+        participant = Calendar_NameList.objects.filter(school_id=school_id)
+        current_time = datetime.strptime(current_time_str, '%Y-%m-%dT%H:%M:%S')
         ## 지각비 정산 helper
         latetime = current_time - start_time ## 지각한 시간
         latetime_second = int(latetime.total_seconds())
 
-        #print(latetime_second)
 
         if(latetime_second <=0):
             latetime_str = '0:00:00'
@@ -560,72 +571,39 @@ class attendanceManageView(APIView):
 
             latetime_str = f"{hours}:{minutes}:{seconds}"
 
-        # ## UPDATE Calendar_namelist
-        # # update: latencyCost, state_point, state, attendanceTime -> set 사용
-        # # add : attendance, accumulated_time  -> obj 사용
         if (latetime_second<=0):
 
-            participant_info.latencyCost = 0
-            participant_info.attendance = participant_info.attendance +1
-            participant_info.accumulated_time = participant_info.accumulated_time + activity_time
-            participant_info.save()
-
-            participant.state = 1
-            participant.late_time = latetime_str
-            participant.attendanceTime = current_time
-            participant.save()    
+            participant.update(state=1)
+            participant.update(late_time = latetime_str)
+            participant.update(attendanceTime = current_time)
+            participant.update(latency_cost = 0)
             
         elif (latetime_second>0 and latetime_second < 60): # 지각X:
 
-            participant_info.latencyCost = 0
-            participant_info.attendance = participant_info.attendance +1
-            participant_info.accumulated_time = participant_info.accumulated_time + activity_time
-            participant_info.save()
-
-            participant.state = 1
-            participant.late_time = latetime_str
-            participant.attendanceTime = current_time
-            participant.save()
+            participant.update(state=1)
+            participant.update(late_time = latetime_str)
+            participant.update(attendanceTime = current_time)
+            participant.update(latency_cost = 0)
 
         elif (latetime_second >=60 and latetime_second <660): # 1-10분 지각
 
-            participant_info.latencyCost = 1000
-            participant_info.attendance = participant_info.attendance +1
-            participant_info.accumulated_time = participant_info.accumulated_time + activity_time
-            participant_info.save()
-
-            participant.state = 2
-            participant.late_time = latetime_str
-            participant.attendanceTime = current_time
-            participant.save()
+            participant.update(state=2)
+            participant.update(late_time = latetime_str)
+            participant.update(attendanceTime = current_time)
+            participant.update(latency_cost = 1000)
         
         elif (latetime_second>=660 and latetime_second <1800): # 11분 이상 지각
-            participant_info.latencyCost = 3000
-            participant_info.attendance = participant_info.attendance +1
-            participant_info.accumulated_time = participant_info.accumulated_time + activity_time -1
-            participant_info.save()
-
-            participant.state = 2
-            participant.late_time = latetime_str
-            participant.attendanceTime = current_time
-            participant.save()
-        
+            participant.update(state=3)
+            participant.update(late_time = latetime_str)
+            participant.update(attendanceTime = current_time)
+            participant.update(latency_cost = 3000)
+    
         elif(latetime_second >=1800):
-            participant_info.latencyCost = 5000
-            participant_info.penalty_cnt = participant_info.penalty_cnt+1
-            participant_info.save()
-
-            participant.state = 3
-            participant.late_time = latetime_str
-            participant.attendanceTime = current_time
-            
-            participant.save()
-
-        serailized_participant = CalendarNameListSerializer(participant)
-        serailized_participant_info = NameSerializer(participant_info)
-         
-        #print(serailized_participant.data)
-        #print(serailized_participant_info.data)
+            participant.update(state=4)
+            participant.update(late_time = latetime_str)
+            participant.update(attendanceTime = current_time)
+            participant.update(latency_cost = 5000)
+            participant.update(penalty = 1)
 
         return Response('complete',status=200)
     

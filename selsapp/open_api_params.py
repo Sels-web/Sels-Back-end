@@ -43,8 +43,8 @@ update_calendar_name_params = openapi.Schema(
         'eventId': openapi.Schema(type=openapi.TYPE_STRING, description='Event ID'),
         'name': openapi.Schema(type=openapi.TYPE_STRING, description='일정에 참가하는 이름'),
         'school_id': openapi.Schema(type=openapi.TYPE_STRING, description='school id'),
-        'state_point': openapi.Schema(type=openapi.TYPE_INTEGER, description='출석 여부 point'),
-        'state': openapi.Schema(type=openapi.TYPE_STRING, description='출석 상태'),
+        # 'state': openapi.Schema(type=openapi.TYPE_INTEGER, description='출석 여부 point'),
+        # 'late_time': openapi.Schema(type=openapi.TYPE_STRING, description='지각 시간'),
         'attendanceTime': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME,default=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), description='출석 시간'),
     }
 )
@@ -58,10 +58,25 @@ post_selslist_params = openapi.Schema(
         'sex': openapi.Schema(type=openapi.TYPE_STRING, description='성별'),
         'school_id': openapi.Schema(type=openapi.TYPE_STRING, description='학번'),
         'department': openapi.Schema(type=openapi.TYPE_STRING, description='학과',default='학과'),
+        # 'attendance': openapi.Schema(type=openapi.TYPE_INTEGER, description='출석 횟수'),
+        # 'accumulated_time': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 봉사시간'),
+        # 'accumulated_cost': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 지각비'),
+        # 'latencyCost': openapi.Schema(type=openapi.TYPE_INTEGER, description='현재 지각비'),
+    }
+)
+update_selslist_params = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'name': openapi.Schema(type=openapi.TYPE_STRING, description='이름'),
+        'is_admin': openapi.Schema(type=openapi.TYPE_STRING, description='직책', default='부원'),
+        'sex': openapi.Schema(type=openapi.TYPE_STRING, description='성별'),
+        'school_id': openapi.Schema(type=openapi.TYPE_STRING, description='학번'),
+        'department': openapi.Schema(type=openapi.TYPE_STRING, description='학과',default='학과'),
         'attendance': openapi.Schema(type=openapi.TYPE_INTEGER, description='출석 횟수'),
         'accumulated_time': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 봉사시간'),
         'accumulated_cost': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 지각비'),
         'latencyCost': openapi.Schema(type=openapi.TYPE_INTEGER, description='현재 지각비'),
+        'penalty_cnt': openapi.Schema(type=openapi.TYPE_INTEGER, description='누적 경고횟수'),
     }
 )
 

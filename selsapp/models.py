@@ -155,9 +155,17 @@ class Calendar_NameList(models.Model):
     school_id = models.CharField(max_length=500, default='')
     name = models.CharField(max_length=500)
     
-    state = models.IntegerField(default=0) # 0: default 1: 참석 2: 지각 3: 노쇼
+    state = models.IntegerField(default=0) # 0: default 1: 참석 2: 1-10분 지각 3: 11분 이상 지각 4: 노쇼
     late_time = models.CharField(max_length=500,default='')
     attendanceTime = models.DateTimeField(default=timezone.now)
+    
+    latency_cost = models.IntegerField(default=0)
+    service_time = models.IntegerField(default=0)
+    penalty = models.IntegerField(default=0)
+    calculated = models.IntegerField(default=0)
+    # latencyCost 추가 필요
+    # 추가되는 봉사시간 필요
+    # penalty_point 추가 필요
 
     class Meta:
         db_table = 'Calendar_NameList'
