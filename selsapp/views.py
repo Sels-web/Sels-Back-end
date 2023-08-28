@@ -181,7 +181,7 @@ class GetnameListView(APIView):
                 if is_exist:
                     namelist = Selslist.objects.filter(latencyCost__gt = 0).order_by(order)
                 else:
-                    return Response({'message':'지각비를 가지고 있는 사람이 없습니다.'})
+                    namelist = Selslist.objects.all().order_by(order)
             elif (latency_cost and name):
                 is_exist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).exists()
                 if is_exist:
@@ -205,12 +205,8 @@ class GetnameListView(APIView):
                         name.accumulated_time = total_service_time
 
                         # 지각비
-                        total_late_cost = participant_events.filter(calculated =0).aggregate(total_late_cost=Sum('latency_cost'))['total_late_cost']
+                        total_late_cost = participant_events.aggregate(total_late_cost=Sum('latency_cost'))['total_late_cost']
                         name.latencyCost = total_late_cost
-
-                        # 누적 지각비
-                        # total_latency_cost = participant_events.aggregate(total_latency_cost=Sum('latency_cost'))['total_latency_cost']
-                        # name.accumulated_cost = total_latency_cost
 
                         #경고 횟수
                         name.penalty_cnt = participant_events.filter(penalty = 1).count()
@@ -409,7 +405,6 @@ class UpdateCalendarNameView(APIView):
             participant.update(latency_cost = 3000)
             participant.update(penalty = 0)
             service_time = event.activity_time -1
-            print(service_time)
             participant.update(service_time = service_time)
     
         elif(latetime_second >=1800):
@@ -421,8 +416,6 @@ class UpdateCalendarNameView(APIView):
             participant.update(service_time =0)
 
         return Response('complete',status=200)
-
-        
 
 class DeleteCalendarNameView(APIView):
     @swagger_auto_schema(query_serializer=CalendarNamelistRemoveSerializer)
@@ -540,15 +533,16 @@ class DeleteReferenceView(APIView):
 class attendanceManageView(APIView):
     @swagger_auto_schema(request_body=post_attendance_params)
     def post(self, request):
-        event_id = request.query_params.get('event_id')
-        current_time_str = request.query_params.get('current_time')
-        school_id = request.query_params.get('school_id')
+        event_id = request.data.get('event_id')
+        current_time_str = request.data.get('current_time')
+        school_id = request.data.get('school_id')
 
+        print(event_id)
         event = Calendar.objects.filter(eventId = event_id).first()
-
         start_time = event.startDate ## 시작 시간 저장
 
         participant = Calendar_NameList.objects.filter(school_id=school_id)
+
         current_time = datetime.strptime(current_time_str, '%Y-%m-%dT%H:%M:%S')
         ## 지각비 정산 helper
         latetime = current_time - start_time ## 지각한 시간
@@ -600,7 +594,6 @@ class attendanceManageView(APIView):
             participant.update(latency_cost = 3000)
             participant.update(penalty = 0)
             service_time = event.activity_time -1
-            print(service_time)
             participant.update(service_time = service_time)
     
         elif(latetime_second >=1800):
@@ -613,3 +606,18 @@ class attendanceManageView(APIView):
 
         return Response('complete',status=200)
     
+# 정산하기
+class CalculateManagementView(APIView):
+    def patch(self,request,event_id):
+        latecomer_list = Calendar_NameList.objects.filter(calendar_id = event_id)
+        for latecomer in latecomer_list:
+            latecomer_info = Selslist.objects.filter(school_id = latecomer.school_id).first()
+            latecomer_info.accumulated_cost = latecomer_info.accumulated_cost + latecomer.latency_cost
+
+            latecomer_info.save()
+
+            latecomer.latency_cost = 0            
+            latecomer.calculated = 1
+            latecomer.save()
+            
+        return Response({'message':'completed'})

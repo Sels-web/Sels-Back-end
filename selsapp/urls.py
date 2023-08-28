@@ -32,11 +32,12 @@ urlpatterns = [
     ## UPDATE
     path('calendar-namelist',views.UpdateCalendarNameView.as_view(),name = 'updatename'), # 캘린더 일정 참석자 수정하기
     ## DELETE
-    # 캘린더 일정 참석자 한명 제거
     path('calendar-namelist/',views.DeleteCalendarNameView.as_view(),name = 'deletename'), # 참석자 제거
 
     ## main function
-    path('attendance',views.attendanceManageView.as_view(),name='attendanceManaage'),
+    path('attendance',views.attendanceManageView.as_view(),name='attendanceManage'),
+    
+    path('calculation/<str:event_id>',views.CalculateManagementView.as_view(),name='calculateManage'),
 
     ## reference 
     path('reference/register',views.PostReferenceView.as_view(),name='postreferencetable'),
