@@ -37,7 +37,7 @@ urlpatterns = [
     ## main function
     path('attendance',views.attendanceManageView.as_view(),name='attendanceManage'),
     
-    path('calculation/<str:event_id>',views.CalculateManagementView.as_view(),name='calculateManage'),
+    path('calculation',views.CalculateManagementView.as_view(),name='calculateManage'),
 
     ## reference 
     path('reference/register',views.PostReferenceView.as_view(),name='postreferencetable'),

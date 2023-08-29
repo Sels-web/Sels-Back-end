@@ -49,7 +49,6 @@ class GetCalendarAllView(APIView):
             elif range == 'month':
                 now = datetime.now()
                 querymonth = now.strftime('%Y-%m')
-                print(querymonth)
                 events = Calendar.objects.filter(startDate__icontains = querymonth )
                 serialized_event = CalendarAllDataSerializer(events, many=True)
                 return Response(serialized_event.data,status=200)
@@ -93,9 +92,27 @@ class PostCalendarView(APIView):
         start_date = request.data.get('startDate')
         end_date = request.data.get('endDate')
 
-        start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M')
-        end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M')
-        activity_time = end_date - start_date
+        format_str = '%Y-%m-%dT%H:%M'
+        format_str_second = '%Y-%m-%dT%H:%M:%S'
+
+        if len(start_date)== 16 and len(end_date)== 16:
+            start_date_obj = datetime.strptime(start_date, format_str)  
+            end_date_obj = datetime.strptime(end_date, format_str)   
+
+        elif len(start_date)== 19 and len(end_date) == 16:
+            start_date_obj = datetime.strptime(start_date, format_str_second)  
+            end_date_obj = datetime.strptime(end_date, format_str)     
+
+        elif len(start_date)== 16 and len(end_date) == 19:
+            start_date_obj = datetime.strptime(start_date, format_str)  
+            end_date_obj = datetime.strptime(end_date, format_str_second)     
+
+        elif len(start_date)== 19 and len(end_date) == 16:
+            start_date_obj = datetime.strptime(start_date, format_str_second)  
+            end_date_obj = datetime.strptime(end_date, format_str_second)
+
+
+        activity_time = end_date_obj - start_date_obj
         activity_hours = int(activity_time.total_seconds() // 3600)
         
         if Calendar.objects.filter(eventId=event_id).exists():
@@ -123,6 +140,28 @@ class UpdateCalendarView(APIView):
         start_date = request.data.get('startDate')
         end_date = request.data.get('endDate')
 
+        format_str = '%Y-%m-%dT%H:%M'
+        format_str_second = '%Y-%m-%dT%H:%M:%S'
+
+        if len(start_date)== 16 and len(end_date)== 16:
+            start_date_obj = datetime.strptime(start_date, format_str)  
+            end_date_obj = datetime.strptime(end_date, format_str)   
+
+        elif len(start_date)== 19 and len(end_date) == 16:
+            start_date_obj = datetime.strptime(start_date, format_str_second)  
+            end_date_obj = datetime.strptime(end_date, format_str)     
+
+        elif len(start_date)== 16 and len(end_date) == 19:
+            start_date_obj = datetime.strptime(start_date, format_str)  
+            end_date_obj = datetime.strptime(end_date, format_str_second)     
+
+        elif len(start_date)== 19 and len(end_date) == 16:
+            start_date_obj = datetime.strptime(start_date, format_str_second)  
+            end_date_obj = datetime.strptime(end_date, format_str_second)
+
+        activity_time = end_date_obj - start_date_obj
+        activity_hours = int(activity_time.total_seconds() // 3600)
+
         is_exists = Calendar.objects.filter(eventId = event_id).exists()
 
         if is_exists:
@@ -131,11 +170,16 @@ class UpdateCalendarView(APIView):
             event.update(color=color)
             event.update(startDate = start_date)
             event.update(endDate = end_date)
-            serialized_event = CalendarAllDataSerializer(event, many = True)
+            event.update(activity_time = activity_hours)
+            namelist= Calendar_NameList.objects.filter(calendar_id = event_id)
+
+            for name in namelist:
+                name.service_time = activity_hours
+                name.save()
+            serialized_event = CalendarAllDataSerializer(event, many=True)
             return Response(serialized_event.data, status=200)
         else:
             return Response({'message': 'eventId is not exists'}, status=404)
-        
 ## 캘린더 일정 제거
 class DeleteCalendarView(APIView):
     def delete(slef,request,eventId):
@@ -180,7 +224,7 @@ class GetnameListView(APIView):
                 if is_exist:
                     namelist = Selslist.objects.filter(name__icontains = name).order_by(order)
                 else:
-                    return Response({'message':'존재하지 않습니다.'})
+                    namelist = Selslist.objects.filter(name__icontains = name).order_by(order)
             elif latency_cost:
                 namelist = Selslist.objects.filter(latencyCost__gt = 0).order_by(order)
             elif (latency_cost and name):
@@ -188,20 +232,20 @@ class GetnameListView(APIView):
                 if is_exist:
                     namelist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).order_by(order)
                 else:
-                    return Response({'message':'지각비를 가지고 있는 사람이 없습니다.'})
+                    namelist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).order_by(order)
             else: 
                 namelist = Selslist.objects.all().order_by(order)
                 for name in namelist:   # 전체 이름 조회로 전부다 수행
-                    # attendance = models.IntegerField(default=0) # 출석횟수
-                    # accumulated_time = models.IntegerField(default=0) # 누적 봉사시간
-                    # accumulated_cost = models.IntegerField(default=0) # 누적 지각비
-                    # latencyCost = models.IntegerField(default=0) # 정산해야하는 지각비
                     participant_events = Calendar_NameList.objects.filter(school_id = name.school_id)
+                    participant = participant_events.first()
                     if participant_events.exists():
                         # 참석 횟수
                         name.attendance = participant_events.exclude(Q(state=0)|Q(state=4)).count()
-
                         # 총 봉사시간
+                        if participant.state == 0 or participant.state ==4:
+                            participant.service_time = 0
+                            participant.save()
+
                         total_service_time = participant_events.aggregate(total_service_time=Sum('service_time'))['total_service_time']
                         name.accumulated_time = total_service_time
 
@@ -210,8 +254,14 @@ class GetnameListView(APIView):
                         name.latencyCost = total_late_cost
 
                         #경고 횟수
-                        name.penalty_cnt = participant_events.filter(penalty = 1).count()
-                        
+                        name.penalty_cnt = participant_events.filter(penalty = 1).count()  
+                        name.save()
+                    else:
+                        name.attendance = 0
+                        name.accumulated_time = 0
+                        name.accumulated_cost = 0
+                        name.latencyCost = 0
+                        name.penalty_cnt = 0
                         name.save()
 
         
@@ -351,7 +401,7 @@ class UpdateCalendarNameView(APIView):
         event = Calendar.objects.filter(eventId = event_id).first()
         start_time = event.startDate ## 시작 시간 저장
 
-        participant = Calendar_NameList.objects.filter(school_id=school_id)
+        participant = Calendar_NameList.objects.filter(school_id=school_id,calendar_id = event_id)
 
         participant.update(name=name)
 
@@ -538,17 +588,16 @@ class attendanceManageView(APIView):
         current_time_str = request.data.get('current_time')
         school_id = request.data.get('school_id')
 
-        print(event_id)
         event = Calendar.objects.filter(eventId = event_id).first()
+        print(event.eventId)
         start_time = event.startDate ## 시작 시간 저장
 
-        participant = Calendar_NameList.objects.filter(school_id=school_id)
+        participant = Calendar_NameList.objects.filter(school_id=school_id,calendar_id = event_id)
 
         current_time = datetime.strptime(current_time_str, '%Y-%m-%dT%H:%M:%S')
         ## 지각비 정산 helper
         latetime = current_time - start_time ## 지각한 시간
         latetime_second = int(latetime.total_seconds())
-
 
         if(latetime_second <=0):
             latetime_str = '0:00:00'
@@ -609,16 +658,15 @@ class attendanceManageView(APIView):
     
 # 정산하기
 class CalculateManagementView(APIView):
-    def patch(self,request,event_id):
-        latecomer_list = Calendar_NameList.objects.filter(calendar_id = event_id)
+    def patch(self,request):
+        latecomer_list = Selslist.objects.filter(latencyCost__gt =0)
         for latecomer in latecomer_list:
-            latecomer_info = Selslist.objects.filter(school_id = latecomer.school_id).first()
-            latecomer_info.accumulated_cost = latecomer_info.accumulated_cost + latecomer.latency_cost
-
-            latecomer_info.save()
-
-            latecomer.latency_cost = 0            
-            latecomer.calculated = 1
+            latecomer_info = Calendar_NameList.objects.filter(school_id = latecomer.school_id).first()
+            
+            latecomer.accumulated_cost = latecomer.accumulated_cost + latecomer_info.latency_cost            
             latecomer.save()
 
+            latecomer_info.latency_cost =0
+            latecomer_info.calculated = 1
+            latecomer_info.save()
         return Response({'message':'completed'})
