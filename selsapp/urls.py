@@ -18,7 +18,7 @@ urlpatterns = [
     ## CREATE
     path('namelist/register',views.PostNameListView.as_view(),name='postname'), # 명단 등록하기
     ## READ
-    path('namelist/search',views.GetnameListView.as_view(),name='getallname'), # 전체 명단 불러오기 by function key
+    path('namelist/search/<int:page>',views.GetnameListView.as_view(),name='getallname'), # 전체 명단 불러오기 by function key
     ## UPDATE
     path('namelist/update',views.UpdateNameListView.as_view(),name='updatename'), # 명단 수정하기
     ## DELETE
@@ -28,7 +28,7 @@ urlpatterns = [
     ## CREATE
     path('calendar-namelist/register',views.PostCalendarNameView.as_view(), name='postname'), # 캘린더 일정에 참석자 등록하기
     ## READ
-    path('calendar-namelist/search/<str:eventId>',views.GetCalendarNameView.as_view(), name='getnamelist'), # 캘린더 일정에 참석자 불러오기
+    path('calendar-namelist/search/<str:eventId>/<int:page>',views.GetCalendarNameView.as_view(), name='getnamelist'), # 캘린더 일정에 참석자 불러오기
     ## UPDATE
     path('calendar-namelist',views.UpdateCalendarNameView.as_view(),name = 'updatename'), # 캘린더 일정 참석자 수정하기
     ## DELETE

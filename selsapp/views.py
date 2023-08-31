@@ -4,7 +4,7 @@
 #from rest_framework import status   
 #from django.http import JsonResponse
 #import json as JSON
-
+from rest_framework.pagination import PageNumberPagination
 # rest_framework
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -21,6 +21,7 @@ from .open_api_params import *
 
 # function
 from datetime import datetime
+from math import *
 
 # Section 1 - 캘린더
 ## 모든 캘린더 불러오기
@@ -110,8 +111,6 @@ class PostCalendarView(APIView):
         elif len(start_date)== 19 and len(end_date) == 16:
             start_date_obj = datetime.strptime(start_date, format_str_second)  
             end_date_obj = datetime.strptime(end_date, format_str_second)
-
-
         activity_time = end_date_obj - start_date_obj
         activity_hours = int(activity_time.total_seconds() // 3600)
         
@@ -205,36 +204,50 @@ class DeleteCalendarView(APIView):
 class GetnameListView(APIView):
     permission_classes = []
     @swagger_auto_schema(query_serializer=NameListSearchSerializer)
-    def get(self,request):
+    def get(self,request,page):
 
         order = request.query_params.get('order')
         latency_cost = request.query_params.get('latencyCost')
         name = request.query_params.get('name')
         school_id = request.query_params.get('school_id')
 
+        #page = request.GET.get("page", 1)  -> request로 페이지 넘버 받아오기
+        page = int(page or 1)
+        page_size = 1
+        limit = page_size * page
+        offset = limit - page_size
+        
         if school_id:   # 학번 검색
             is_exist = Selslist.objects.filter(school_id__icontains = school_id).exists()
             if is_exist:
-                namelist = Selslist.objects.filter(school_id__icontains = school_id).order_by(order)
+                namelist = Selslist.objects.filter(school_id__icontains = school_id).all().order_by(order)[offset:limit]
+                page_count = ceil(Selslist.objects.filter(school_id__icontains = school_id).all().count()/ page_size)
             else:
                 return Response({'message': '존재하지 않는 학번입니다.'}, status=404)
         else:   
             if name: # 이름 검색
                 is_exist = Selslist.objects.filter(name__icontains = name).exists()
                 if is_exist:
-                    namelist = Selslist.objects.filter(name__icontains = name).order_by(order)
+                    namelist = Selslist.objects.filter(name__icontains = name).all().order_by(order)[offset:limit]
+                    page_count = ceil(Selslist.objects.filter(name__icontains = name).all().count()/ page_size)
                 else:
-                    namelist = Selslist.objects.filter(name__icontains = name).order_by(order)
+                    namelist = Selslist.objects.filter(name__icontains = name).all().order_by(order)[offset:limit]
+                    page_count = ceil(Selslist.objects.filter(name__icontains = name).all().count()/ page_size)
             elif latency_cost:
-                namelist = Selslist.objects.filter(latencyCost__gt = 0).order_by(order)
+                namelist = Selslist.objects.filter(latencyCost__gt = 0).all().order_by(order)[offset:limit]
+                page_count = ceil(Selslist.objects.filter(latencyCost__gt = 0).all().count()/ page_size)
+
             elif (latency_cost and name):
                 is_exist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).exists()
                 if is_exist:
-                    namelist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).order_by(order)
+                    namelist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).all().order_by(order)[offset:limit]
+                    page_count = ceil(Selslist.objects.filter(name__icontains = name,latency_cost = 0).all().count()/ page_size)
                 else:
-                    namelist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).order_by(order)
+                    namelist = Selslist.objects.filter(name__icontains = name,latency_cost = 0).all().order_by(order)[offset:limit]
+                    page_count = ceil(Selslist.objects.filter(name__icontains = name,latency_cost = 0).all().count()/ page_size)
             else: 
-                namelist = Selslist.objects.all().order_by(order)
+                namelist = Selslist.objects.all().order_by(order)[offset:limit]
+                page_count = ceil(Selslist.objects.all().count()/ page_size)
                 for name in namelist:   # 전체 이름 조회로 전부다 수행
                     participant_events = Calendar_NameList.objects.filter(school_id = name.school_id)
                     participant = participant_events.first()
@@ -265,8 +278,18 @@ class GetnameListView(APIView):
                         name.save()
 
         
-        serialized_selslist = NameSerializer(namelist,many = True)
-        return Response(serialized_selslist.data,status=200)
+        serialized_selslist = NameSerializer(namelist,many = True).data
+        if page_count ==0:
+            context = {
+                "명단": serialized_selslist, # 👈 page 번호에 따른 Object
+            }
+        else:
+            context = {
+                "명단": serialized_selslist, # 👈 page 번호에 따른 Object
+                "page": page, # 👈 현재 페이지 번호
+                "page_count": page_count, # 👈 전체 페이지 갯수
+            }
+        return Response(context,status=200)
         
 ## 부원 등록    
 class PostNameListView(APIView):
@@ -383,11 +406,31 @@ class PostCalendarNameView(APIView):
             return Response(serialized_name.data, status=201)       
         else:
             return Response({'message': 'eventId is not exists'}, status=404)
+        
 class GetCalendarNameView(APIView):
-    def get(self,request,eventId):
-        namelist = Calendar_NameList.objects.filter(calendar_id = eventId)     
-        serailized_namelist = CalendarNameListSerializer(namelist,many=True)
-        return Response(serailized_namelist.data, status=200)
+    def get(self,request,eventId,page):
+        #page = request.GET.get("page", 1)  -> request로 페이지 넘버 받아오기
+        page = int(page or 1)
+        page_size = 3
+        limit = page_size * page
+        offset = limit - page_size
+        namelist = Calendar_NameList.objects.filter(calendar_id = eventId).all().order_by('name')[offset:limit]    
+        page_count = ceil(Calendar_NameList.objects.filter(calendar_id = eventId).all().count() / page_size)
+        
+        serailized_namelist = CalendarNameListSerializer(namelist,many=True).data
+        if page_count == 0:
+            context = {
+                serailized_namelist, # 👈 page 번호에 따른 Object
+            }
+        else:
+            context = {
+                "명단": serailized_namelist, # 👈 page 번호에 따른 Object
+                "page": page, # 👈 현재 페이지 번호
+                "page_count": page_count, # 👈 전체 페이지 갯수
+            }
+        return Response(context, status=200)
+
+
 
 ## 수정필요-2023.08.25 / 수정완료
 class UpdateCalendarNameView(APIView):
@@ -513,22 +556,51 @@ class PostReferenceView(APIView):
 class GetReferenceView(APIView):
     @swagger_auto_schema(query_serializer=ReferenceSearchSerializer)
     def get(self, request):
+        #page = request.GET.get("page", 1)  -> request로 페이지 넘버 받아오기
+        page = int(page or 1)
+        page_size = 3
+        limit = page_size * page
+        offset = limit - page_size
+        #namelist = Calendar_NameList.objects.filter(calendar_id = eventId).all().order_by('name')[offset:limit]    
+        #page_count = ceil(Calendar_NameList.objects.filter(calendar_id = eventId).all().count() / page_size)
         range = request.query_params.get('range')
         id = request.query_params.get('id')
 
         if range == 'all':
-            posts = Reference.objects.all()
+            posts = Reference.objects.all()[offset:limit]
+            page_count = ceil(Reference.objects.all().count() / page_size)
             if posts.exists():
-                serialized_posts = ReferenceSerializer(posts, many=True)
-                return Response(serialized_posts.data, status=200)
+                serialized_posts = ReferenceSerializer(posts, many=True).data
+                if page_count == 0:
+                    context = {
+                        serialized_posts, # 👈 page 번호에 따른 Object
+                    }
+                else:
+                    context = {
+                        "명단": serialized_posts, # 👈 page 번호에 따른 Object
+                        "page": page, # 👈 현재 페이지 번호
+                        "page_count": page_count, # 👈 전체 페이지 갯수
+                    }
+                return Response(context, status=200)
             else:
                 return Response({'message': '게시물이 존재 하지 않습니다'}, status=404)
             
         elif range == 'one':
-            post = Reference.objects.filter(id = id)
+            post = Reference.objects.filter(id = id).all()[offset:limit]
+            page_count = ceil(Reference.objects.filter(id=id).all().count() / page_size)
             if post.exists():
-                serialized_post = ReferenceSerializer(post, many=True)
-                return Response(serialized_post.data,status=200)
+                serialized_post = ReferenceSerializer(post, many=True).data
+                if page_count == 0:
+                    context = {
+                        serialized_post, # 👈 page 번호에 따른 Object
+                    }
+                else:
+                    context = {
+                        "명단": serialized_post, # 👈 page 번호에 따른 Object
+                        "page": page, # 👈 현재 페이지 번호
+                        "page_count": page_count, # 👈 전체 페이지 갯수
+                    }
+                return Response(context, status=200)
             else:
                 return Response({'message': '해당하는 게시물을 찾을 수 없습니다.'}, status=404)
 
