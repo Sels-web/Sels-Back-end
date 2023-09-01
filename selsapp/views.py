@@ -389,21 +389,25 @@ class PostCalendarNameView(APIView):
         event_info = event.first()
 
         if event.exists():
-            add_name = Calendar_NameList(
-               calendar_id = event_id,
-               school_id = school_id,
-               name = name,
-               state = 0,
-               late_time = 'default',
-               attendanceTime =event_info.startDate,
-               latency_cost = 0,
-               service_time = 0,
-               penalty = 0,
-               calculated = 0,
-            )
-            add_name.save()
-            serialized_name = CalendarNameListSerializer(add_name)
-            return Response(serialized_name.data, status=201)       
+            participant = Calendar_NameList.objects.filter(calendar_id = event_info.eventId, school_id = school_id)
+            if participant.exists():
+                return Response({'message': 'User already exists'})
+            else:
+                add_name = Calendar_NameList(
+                calendar_id = event_id,
+                school_id = school_id,
+                name = name,
+                state = 0,
+                late_time = 'default',
+                attendanceTime =event_info.startDate,
+                latency_cost = 0,
+                service_time = 0,
+                penalty = 0,
+                calculated = 0,
+                )
+                add_name.save()
+                serialized_name = CalendarNameListSerializer(add_name)
+                return Response(serialized_name.data, status=201)       
         else:
             return Response({'message': 'eventId is not exists'}, status=404)
         
@@ -448,10 +452,16 @@ class UpdateCalendarNameView(APIView):
 
         participant.update(name=name)
 
-        current_time = datetime.strptime(attendanceTime, '%Y-%m-%dT%H:%M:%S')
+        format_str = '%Y-%m-%dT%H:%M'
+        format_str_second = '%Y-%m-%dT%H:%M:%S'
+
+        if len(attendanceTime)== 16:
+            current_time_obj = datetime.strptime(attendanceTime,format_str)
+        else:
+            current_time_obj = datetime.strptime(attendanceTime,format_str_second)
 
         ## 지각비 정산 helper
-        latetime = current_time - start_time ## 지각한 시간
+        latetime = current_time_obj - start_time ## 지각한 시간
         latetime_second = int(latetime.total_seconds())
 
         if(latetime_second <=0):
@@ -469,7 +479,7 @@ class UpdateCalendarNameView(APIView):
 
             participant.update(state=1)
             participant.update(late_time = latetime_str)
-            participant.update(attendanceTime = current_time)
+            participant.update(attendanceTime = current_time_obj)
             participant.update(latency_cost = 0)
             participant.update(penalty = 0)
             participant.update(service_time = event.activity_time)
@@ -478,7 +488,7 @@ class UpdateCalendarNameView(APIView):
 
             participant.update(state=1)
             participant.update(late_time = latetime_str)
-            participant.update(attendanceTime = current_time)
+            participant.update(attendanceTime = current_time_obj)
             participant.update(latency_cost = 0)
             participant.update(penalty = 0)
             participant.update(service_time = event.activity_time)
@@ -487,7 +497,7 @@ class UpdateCalendarNameView(APIView):
 
             participant.update(state=2)
             participant.update(late_time = latetime_str)
-            participant.update(attendanceTime = current_time)
+            participant.update(attendanceTime = current_time_obj)
             participant.update(latency_cost = 1000)
             participant.update(penalty = 0)
             participant.update(service_time = event.activity_time)
@@ -495,7 +505,7 @@ class UpdateCalendarNameView(APIView):
         elif (latetime_second>=660 and latetime_second <1800): # 11분 이상 지각
             participant.update(state=3)
             participant.update(late_time = latetime_str)
-            participant.update(attendanceTime = current_time)
+            participant.update(attendanceTime = current_time_obj)
             participant.update(latency_cost = 3000)
             participant.update(penalty = 0)
             service_time = event.activity_time -1
@@ -504,7 +514,7 @@ class UpdateCalendarNameView(APIView):
         elif(latetime_second >=1800):
             participant.update(state=4)
             participant.update(late_time = latetime_str)
-            participant.update(attendanceTime = current_time)
+            participant.update(attendanceTime = current_time_obj)
             participant.update(latency_cost = 5000)
             participant.update(penalty = 1)
             participant.update(service_time =0)
@@ -733,12 +743,15 @@ class CalculateManagementView(APIView):
     def patch(self,request):
         latecomer_list = Selslist.objects.filter(latencyCost__gt =0)
         for latecomer in latecomer_list:
-            latecomer_info = Calendar_NameList.objects.filter(school_id = latecomer.school_id).first()
-            
-            latecomer.accumulated_cost = latecomer.accumulated_cost + latecomer_info.latency_cost            
-            latecomer.save()
 
-            latecomer_info.latency_cost =0
-            latecomer_info.calculated = 1
-            latecomer_info.save()
+            latecomer_infos = Calendar_NameList.objects.filter(school_id = latecomer.school_id).all()
+            for latecomer_info in latecomer_infos:
+                if latecomer_info.calculated == 0:
+                    latecomer.accumulated_cost = latecomer.accumulated_cost + latecomer_info.latency_cost
+                    latecomer.save()
+                    latecomer_info.latency_cost =0
+                    latecomer_info.calculated = 1
+                    latecomer_info.save()                        
+            
+
         return Response({'message':'completed'})
