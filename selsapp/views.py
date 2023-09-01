@@ -108,7 +108,7 @@ class PostCalendarView(APIView):
             start_date_obj = datetime.strptime(start_date, format_str)  
             end_date_obj = datetime.strptime(end_date, format_str_second)     
 
-        elif len(start_date)== 19 and len(end_date) == 16:
+        elif len(start_date)== 19 and len(end_date) == 19:
             start_date_obj = datetime.strptime(start_date, format_str_second)  
             end_date_obj = datetime.strptime(end_date, format_str_second)
         activity_time = end_date_obj - start_date_obj
@@ -136,7 +136,8 @@ class UpdateCalendarView(APIView):
         title = request.data.get('title')
         color = request.data.get('color')
         event_id = request.data.get('eventId')
-        start_date = request.data.get('startDate')
+        # start_date, end_date -> str으로 넘어옴
+        start_date = request.data.get('startDate') 
         end_date = request.data.get('endDate')
 
         format_str = '%Y-%m-%dT%H:%M'
@@ -154,7 +155,7 @@ class UpdateCalendarView(APIView):
             start_date_obj = datetime.strptime(start_date, format_str)  
             end_date_obj = datetime.strptime(end_date, format_str_second)     
 
-        elif len(start_date)== 19 and len(end_date) == 16:
+        elif len(start_date)== 19 and len(end_date) == 19:
             start_date_obj = datetime.strptime(start_date, format_str_second)  
             end_date_obj = datetime.strptime(end_date, format_str_second)
 
@@ -166,16 +167,78 @@ class UpdateCalendarView(APIView):
         if is_exists:
             event = Calendar.objects.filter(eventId = event_id)
             event.update(title=title)
-            event.update(color=color)
-            event.update(startDate = start_date)
-            event.update(endDate = end_date)
+            event.update(color = color)
+            event.update(startDate = start_date_obj)
+            event.update(endDate = end_date_obj)
             event.update(activity_time = activity_hours)
+
             namelist= Calendar_NameList.objects.filter(calendar_id = event_id)
+            start_time = start_date_obj ## 시작 시간 저장
 
             for name in namelist:
                 name.service_time = activity_hours
+## 수정중         
+                attendance_time = name.attendanceTime
+                
+                ## 지각비 정산 helper
+                latetime = attendance_time - start_time ## 지각한 시간
+                latetime_second = int(latetime.total_seconds())
+                
+                if(latetime_second <=0):
+                    latetime_str = '0:00:00'
+                
+                else:
+                    ## state helper
+                    hours = latetime.seconds // 3600  # 초를 시간 단위로 변환
+                    minutes = (latetime.seconds // 60) % 60  # 초를 분 단위로 변환
+                    seconds = latetime.seconds % 60
+
+                    latetime_str = f"{hours}:{minutes}:{seconds}"
+                
+                if (latetime_second<=0):
+                    name.state=1
+                    name.late_time = latetime_str
+                    name.attendanceTime = attendance_time
+                    name.latency_cost = 0
+                    name.penalty = 0
+                    name.service_time = activity_hours
+
+                    
+                elif (latetime_second>0 and latetime_second < 60): # 지각X:
+                    name.state=1
+                    name.late_time = latetime_str
+                    name.attendanceTime = attendance_time
+                    name.latency_cost = 0
+                    name.penalty = 0
+                    name.service_time = activity_hours
+
+                elif (latetime_second >=60 and latetime_second <660): # 1-10분 지각
+                    name.state=2
+                    name.late_time = latetime_str
+                    name.attendanceTime = attendance_time
+                    name.latency_cost = 1000
+                    name.penalty = 0
+                    name.service_time = activity_hours
+                
+                elif (latetime_second>=660 and latetime_second <1800): # 11분 이상 지각
+                    name.state=3
+                    name.late_time = latetime_str
+                    name.attendanceTime = attendance_time
+                    name.latency_cost = 3000
+                    name.penalty = 0
+                    name.service_time = activity_hours -1
+            
+                elif(latetime_second >=1800):
+                    name.state=4
+                    name.late_time = latetime_str
+                    name.attendanceTime = attendance_time
+                    name.latency_cost = 5000
+                    name.penalty = 1
+                    name.service_time = 0
                 name.save()
-            serialized_event = CalendarAllDataSerializer(event, many=True)
+            serialized_event = CalendarAllDataSerializer(event,many=True)
+
+## 수정중
             return Response(serialized_event.data, status=200)
         else:
             return Response({'message': 'eventId is not exists'}, status=404)
@@ -420,7 +483,7 @@ class GetCalendarNameView(APIView):
         offset = limit - page_size
         namelist = Calendar_NameList.objects.filter(calendar_id = eventId).all().order_by('name')[offset:limit]    
         page_count = ceil(Calendar_NameList.objects.filter(calendar_id = eventId).all().count() / page_size)
-        
+
         serailized_namelist = CalendarNameListSerializer(namelist,many=True).data
         if page_count == 0:
             context = {
@@ -671,12 +734,15 @@ class attendanceManageView(APIView):
         school_id = request.data.get('school_id')
 
         event = Calendar.objects.filter(eventId = event_id).first()
-        print(event.eventId)
+    
         start_time = event.startDate ## 시작 시간 저장
 
         participant = Calendar_NameList.objects.filter(school_id=school_id,calendar_id = event_id)
 
-        current_time = datetime.strptime(current_time_str, '%Y-%m-%dT%H:%M:%S')
+        if len(current_time_str) == 16:
+            current_time = datetime.strptime(current_time_str, '%Y-%m-%dT%H:%M')
+        else:
+            current_time = datetime.strptime(current_time_str, '%Y-%m-%dT%H:%M:%S')
         ## 지각비 정산 helper
         latetime = current_time - start_time ## 지각한 시간
         latetime_second = int(latetime.total_seconds())
