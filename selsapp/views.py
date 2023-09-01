@@ -281,11 +281,11 @@ class GetnameListView(APIView):
         serialized_selslist = NameSerializer(namelist,many = True).data
         if page_count ==0:
             context = {
-                "명단": serialized_selslist, # 👈 page 번호에 따른 Object
+                "list": serialized_selslist, # 👈 page 번호에 따른 Object
             }
         else:
             context = {
-                "명단": serialized_selslist, # 👈 page 번호에 따른 Object
+                "list": serialized_selslist, # 👈 page 번호에 따른 Object
                 "page": page, # 👈 현재 페이지 번호
                 "page_count": page_count, # 👈 전체 페이지 갯수
             }
@@ -424,7 +424,7 @@ class GetCalendarNameView(APIView):
             }
         else:
             context = {
-                "명단": serailized_namelist, # 👈 page 번호에 따른 Object
+                "list": serailized_namelist, # 👈 page 번호에 따른 Object
                 "page": page, # 👈 현재 페이지 번호
                 "page_count": page_count, # 👈 전체 페이지 갯수
             }
@@ -577,7 +577,7 @@ class GetReferenceView(APIView):
                     }
                 else:
                     context = {
-                        "명단": serialized_posts, # 👈 page 번호에 따른 Object
+                        "list": serialized_posts, # 👈 page 번호에 따른 Object
                         "page": page, # 👈 현재 페이지 번호
                         "page_count": page_count, # 👈 전체 페이지 갯수
                     }
@@ -596,7 +596,7 @@ class GetReferenceView(APIView):
                     }
                 else:
                     context = {
-                        "명단": serialized_post, # 👈 page 번호에 따른 Object
+                        "list": serialized_post, # 👈 page 번호에 따른 Object
                         "page": page, # 👈 현재 페이지 번호
                         "page_count": page_count, # 👈 전체 페이지 갯수
                     }
