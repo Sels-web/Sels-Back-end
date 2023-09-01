@@ -213,7 +213,7 @@ class GetnameListView(APIView):
 
         #page = request.GET.get("page", 1)  -> request로 페이지 넘버 받아오기
         page = int(page or 1)
-        page_size = 1
+        page_size = 10
         limit = page_size * page
         offset = limit - page_size
         
@@ -411,7 +411,7 @@ class GetCalendarNameView(APIView):
     def get(self,request,eventId,page):
         #page = request.GET.get("page", 1)  -> request로 페이지 넘버 받아오기
         page = int(page or 1)
-        page_size = 3
+        page_size = 10
         limit = page_size * page
         offset = limit - page_size
         namelist = Calendar_NameList.objects.filter(calendar_id = eventId).all().order_by('name')[offset:limit]    
@@ -558,7 +558,7 @@ class GetReferenceView(APIView):
     def get(self, request):
         #page = request.GET.get("page", 1)  -> request로 페이지 넘버 받아오기
         page = int(page or 1)
-        page_size = 3
+        page_size = 10
         limit = page_size * page
         offset = limit - page_size
         #namelist = Calendar_NameList.objects.filter(calendar_id = eventId).all().order_by('name')[offset:limit]    
