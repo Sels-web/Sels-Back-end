@@ -391,7 +391,7 @@ class PostCalendarNameView(APIView):
         if event.exists():
             participant = Calendar_NameList.objects.filter(calendar_id = event_info.eventId, school_id = school_id)
             if participant.exists():
-                return Response({'message': 'User already exists'})
+                return Response({'message': 'User already exists'}, status= 400)
             else:
                 add_name = Calendar_NameList(
                 calendar_id = event_id,
