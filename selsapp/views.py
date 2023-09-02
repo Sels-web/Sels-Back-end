@@ -483,7 +483,7 @@ class GetCalendarNameView(APIView):
         namelist = Calendar_NameList.objects.filter(calendar_id = eventId).all().order_by('name')[offset:limit]    
         page_count = ceil(Calendar_NameList.objects.filter(calendar_id = eventId).all().count() / page_size)
 
-        serailized_namelist = CalendarNameListSerializer(namelist,many=True).data
+        serailized_namelist = GetCalendarNameListSerializer(namelist,many=True).data
         
         if not namelist.exists():
             return Response([],status=200) # 👈 page 번호에 따른 Object

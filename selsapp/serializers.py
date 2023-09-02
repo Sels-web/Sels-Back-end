@@ -24,6 +24,22 @@ class CalendarNameListSerializer(ModelSerializer):
         model = Calendar_NameList
         fields = '__all__'
 
+class GetCalendarNameListSerializer(ModelSerializer):
+    time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Calendar_NameList
+        exclude = ['attendanceTime']
+
+    def get_time(self, obj):
+
+        attendance_time = obj.attendanceTime
+        if attendance_time:
+            # 'attendanceTime' 값을 datetime 객체로 파싱하고 원하는 형식으로 포맷합니다.
+            formatted_time = attendance_time.strftime('%H:%M:%S')
+            return formatted_time
+        else:
+            return None
 class ReferenceSerializer(ModelSerializer):
     class Meta:
         model = Reference
