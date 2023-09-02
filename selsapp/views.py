@@ -177,65 +177,66 @@ class UpdateCalendarView(APIView):
 
             for name in namelist:
                 name.service_time = activity_hours
-## 수정중         
-                attendance_time = name.attendanceTime
-                
-                ## 지각비 정산 helper
-                latetime = attendance_time - start_time ## 지각한 시간
-                latetime_second = int(latetime.total_seconds())
-                
-                if(latetime_second <=0):
-                    latetime_str = '0:00:00'
-                
-                else:
-                    ## state helper
-                    hours = latetime.seconds // 3600  # 초를 시간 단위로 변환
-                    minutes = (latetime.seconds // 60) % 60  # 초를 분 단위로 변환
-                    seconds = latetime.seconds % 60
-
-                    latetime_str = f"{hours}:{minutes}:{seconds}"
-                
-                if (latetime_second<=0):
-                    name.state=1
-                    name.late_time = latetime_str
-                    name.attendanceTime = attendance_time
-                    name.latency_cost = 0
-                    name.penalty = 0
-                    name.service_time = activity_hours
-
+## 수정중          
+                if name.state >0:
+                    attendance_time = name.attendanceTime
                     
-                elif (latetime_second>0 and latetime_second < 60): # 지각X:
-                    name.state=1
-                    name.late_time = latetime_str
-                    name.attendanceTime = attendance_time
-                    name.latency_cost = 0
-                    name.penalty = 0
-                    name.service_time = activity_hours
+                    ## 지각비 정산 helper
+                    latetime = attendance_time - start_time ## 지각한 시간
+                    latetime_second = int(latetime.total_seconds())
+                    
+                    if(latetime_second <=0):
+                        latetime_str = '0:00:00'
+                    
+                    else:
+                        ## state helper
+                        hours = latetime.seconds // 3600  # 초를 시간 단위로 변환
+                        minutes = (latetime.seconds // 60) % 60  # 초를 분 단위로 변환
+                        seconds = latetime.seconds % 60
 
-                elif (latetime_second >=60 and latetime_second <660): # 1-10분 지각
-                    name.state=2
-                    name.late_time = latetime_str
-                    name.attendanceTime = attendance_time
-                    name.latency_cost = 1000
-                    name.penalty = 0
-                    name.service_time = activity_hours
+                        latetime_str = f"{hours}:{minutes}:{seconds}"
+                    
+                    if (latetime_second<=0):
+                        name.state=1
+                        name.late_time = latetime_str
+                        name.attendanceTime = attendance_time
+                        name.latency_cost = 0
+                        name.penalty = 0
+                        name.service_time = activity_hours
+
+                        
+                    elif (latetime_second>0 and latetime_second < 60): # 지각X:
+                        name.state=1
+                        name.late_time = latetime_str
+                        name.attendanceTime = attendance_time
+                        name.latency_cost = 0
+                        name.penalty = 0
+                        name.service_time = activity_hours
+
+                    elif (latetime_second >=60 and latetime_second <660): # 1-10분 지각
+                        name.state=2
+                        name.late_time = latetime_str
+                        name.attendanceTime = attendance_time
+                        name.latency_cost = 1000
+                        name.penalty = 0
+                        name.service_time = activity_hours
+                    
+                    elif (latetime_second>=660 and latetime_second <1800): # 11분 이상 지각
+                        name.state=3
+                        name.late_time = latetime_str
+                        name.attendanceTime = attendance_time
+                        name.latency_cost = 3000
+                        name.penalty = 0
+                        name.service_time = activity_hours -1
                 
-                elif (latetime_second>=660 and latetime_second <1800): # 11분 이상 지각
-                    name.state=3
-                    name.late_time = latetime_str
-                    name.attendanceTime = attendance_time
-                    name.latency_cost = 3000
-                    name.penalty = 0
-                    name.service_time = activity_hours -1
-            
-                elif(latetime_second >=1800):
-                    name.state=4
-                    name.late_time = latetime_str
-                    name.attendanceTime = attendance_time
-                    name.latency_cost = 5000
-                    name.penalty = 1
-                    name.service_time = 0
-                name.save()
+                    elif(latetime_second >=1800):
+                        name.state=4
+                        name.late_time = latetime_str
+                        name.attendanceTime = attendance_time
+                        name.latency_cost = 5000
+                        name.penalty = 1
+                        name.service_time = 0
+                    name.save()
             serialized_event = CalendarAllDataSerializer(event,many=True)
 
 ## 수정중
@@ -343,16 +344,14 @@ class GetnameListView(APIView):
         
         serialized_selslist = NameSerializer(namelist,many = True).data
         if page_count ==0:
-            context = {
-                "list": serialized_selslist, # 👈 page 번호에 따른 Object
-            }
+            return Response([],status=200)
         else:
             context = {
                 "list": serialized_selslist, # 👈 page 번호에 따른 Object
                 "page": page, # 👈 현재 페이지 번호
                 "page_count": page_count, # 👈 전체 페이지 갯수
             }
-        return Response(context,status=200)
+            return Response(context,status=200)
         
 ## 부원 등록    
 class PostNameListView(APIView):
@@ -485,17 +484,16 @@ class GetCalendarNameView(APIView):
         page_count = ceil(Calendar_NameList.objects.filter(calendar_id = eventId).all().count() / page_size)
 
         serailized_namelist = CalendarNameListSerializer(namelist,many=True).data
-        if page_count == 0:
-            context = {
-                serailized_namelist, # 👈 page 번호에 따른 Object
-            }
+        
+        if not namelist.exists():
+            return Response([],status=200) # 👈 page 번호에 따른 Object
         else:
             context = {
                 "list": serailized_namelist, # 👈 page 번호에 따른 Object
                 "page": page, # 👈 현재 페이지 번호
                 "page_count": page_count, # 👈 전체 페이지 갯수
             }
-        return Response(context, status=200)
+            return Response(context, status=200)
 
 
 
@@ -645,9 +643,7 @@ class GetReferenceView(APIView):
             if posts.exists():
                 serialized_posts = ReferenceSerializer(posts, many=True).data
                 if page_count == 0:
-                    context = {
-                        serialized_posts, # 👈 page 번호에 따른 Object
-                    }
+                    context = [] # 👈 page 번호에 따른 Object
                 else:
                     context = {
                         "list": serialized_posts, # 👈 page 번호에 따른 Object
@@ -664,9 +660,7 @@ class GetReferenceView(APIView):
             if post.exists():
                 serialized_post = ReferenceSerializer(post, many=True).data
                 if page_count == 0:
-                    context = {
-                        serialized_post, # 👈 page 번호에 따른 Object
-                    }
+                    context = [] # 👈 page 번호에 따른 Object
                 else:
                     context = {
                         "list": serialized_post, # 👈 page 번호에 따른 Object
