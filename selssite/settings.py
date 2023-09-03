@@ -102,21 +102,13 @@ WSGI_APPLICATION = 'selssite.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Sels',
-        'USER': 'root',
-        'PASSWORD': '38718643',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    },
-    'develop':{
         'ENGINE': get_secret("SECRET_ENGINE"),
         'NAME': get_secret("SECRET_NAME"),
         'USER': get_secret("SECRET_USER"),
         'PASSWORD': get_secret("SECRET_PASS"),
         'HOST': get_secret("SECRET_HOST"),
         'PORT': get_secret("SECRET_PORT"),
-    }
+    },
 }
 
 
