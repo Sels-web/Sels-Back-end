@@ -66,6 +66,10 @@ class CalendarNamelistRemoveSerializer(serializers.Serializer):
     event_id = serializers.CharField(help_text = '특정 이벤트', required=True)
     school_id = serializers.CharField(help_text = '개인 삭제',required=False)
 
+class CalendarNamelistSearchSerializer(serializers.Serializer):
+    event_id = serializers.CharField(help_text = '특정 이벤트', required=True)
+    name = serializers.CharField(help_text = '찾을 이름',required=False)
+
 class ReferenceSearchSerializer(serializers.Serializer):
     range = serializers.CharField(help_text = '검색 범위:all, one', required= True)
     id = serializers.IntegerField(help_text = '게시물 번호', required=False)

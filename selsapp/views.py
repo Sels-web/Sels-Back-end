@@ -474,14 +474,24 @@ class PostCalendarNameView(APIView):
             return Response({'message': 'eventId is not exists'}, status=404)
         
 class GetCalendarNameView(APIView):
-    def get(self,request,eventId,page):
+    @swagger_auto_schema(query_serializer=CalendarNamelistSearchSerializer)
+    def get(self,request,page):
         #page = request.GET.get("page", 1)  -> request로 페이지 넘버 받아오기
+    
+        eventId = request.query_params.get('event_id')
+        name = request.query_params.get('name')
+        
         page = int(page or 1)
-        page_size = 10
+        page_size = 1
         limit = page_size * page
         offset = limit - page_size
-        namelist = Calendar_NameList.objects.filter(calendar_id = eventId).all().order_by('name')[offset:limit]    
-        page_count = ceil(Calendar_NameList.objects.filter(calendar_id = eventId).all().count() / page_size)
+        
+        if name:
+            namelist = Calendar_NameList.objects.filter(calendar_id = eventId,name__icontains = name).order_by('name')[offset:limit]    
+            page_count = ceil(Calendar_NameList.objects.filter(calendar_id = eventId,name__icontains = name).all().count() / page_size)
+        else:
+            namelist = Calendar_NameList.objects.filter(calendar_id = eventId).all().order_by('name')[offset:limit]    
+            page_count = ceil(Calendar_NameList.objects.filter(calendar_id = eventId).all().count() / page_size)
 
         serailized_namelist = GetCalendarNameListSerializer(namelist,many=True).data
         
@@ -492,6 +502,7 @@ class GetCalendarNameView(APIView):
                 "list": serailized_namelist, # 👈 page 번호에 따른 Object
                 "page": page, # 👈 현재 페이지 번호
                 "page_count": page_count, # 👈 전체 페이지 갯수
+                "page_size": page_size,
             }
             return Response(context, status=200)
 
